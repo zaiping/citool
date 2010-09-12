@@ -120,7 +120,7 @@ DO row= 1, dimhspace
         END IF
       END DO
       
-      CALL  CHECKEMENT(elexists, cutoff, uhh + ueh)
+      CALL  CHECKELEMENT(elexists, cutoff, uhh + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==0) THEN  ! *** 1 electron is moved ***
 
@@ -154,7 +154,7 @@ DO row= 1, dimhspace
         END IF
       END DO
 
-      CALL  CHECKEMENT(elexists, cutoff, uee + ueh)
+      CALL  CHECKELEMENT(elexists, cutoff, uee + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==2) THEN  !*** 1 hole and 1 elec moved ***
       
@@ -224,8 +224,8 @@ DO row= 1, dimhspace
       END DO
 
       uee= 0.
-      CALL CHECKCI(uee, ci_ee, ciindex_ee, ni, nj, nk, nl)
-      CALL CHECKCI(uee, ci_ee, ciindex_ee, nj, ni, nk, nl)
+      CALL ADDCI(uee, ci_ee, ciindex_ee, ni, nj, nk, nl)
+      CALL SUBCI(uee, ci_ee, ciindex_ee, nj, ni, nk, nl)
       
       CALL  CHECKELEMENT(elexists, cutoff, uee)
       

@@ -265,17 +265,6 @@ blockstart(currentblock+1)= dimhspace + 1
 numblock= currentblock
 
 
-!Q hami(dimham+1)= nonzero + 1
-
-!!$PRINT*, "npm00=", npm00 + dimham
-!!$PRINT*, "npm01=", npm01, dimham*((numspstates_h-num_h)*num_h)/2
-!!$PRINT*, "npm10=", npm10, dimham*((numspstates_e-num_e)*num_e)/2
-!!$PRINT*, "npm11=", npm11, dimham*((numspstates_h-num_h)*num_h*(numspstates_e-num_e)*num_e)/2
-!!$PRINT*, "npm02=", npm02, dimham*((numspstates_h-num_h)*num_h*(numspstates_h-num_h-1)*(num_h-1)/4)/2
-!!$PRINT*, "npm20=", npm20, dimham*((numspstates_e-num_e)*num_e*(numspstates_e-num_e-1)*(num_e-1)/4)/2
-!!$PRINT*, "npmx=", npmx
-!!$PRINT*, "non zero elems:", npm00+dimham+npm01+npm10+npm11+npm02+npm20
-
 CONTAINS
 
   SUBROUTINE ADDCI(uu, ci, ciindex, n1, n2, n3, n4)

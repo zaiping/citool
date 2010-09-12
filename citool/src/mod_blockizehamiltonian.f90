@@ -17,7 +17,7 @@ SUBROUTINE BLOCKIZEHAMILTONIAN( dimhspace, ket, cutoff,            &
 
 INTEGER, INTENT(IN) :: dimhspace     ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(INOUT) :: ket(:,:)  !(dimhspace,2)
-REAL*8,, INTENT(IN) :: cutoff
+REAL*8, INTENT(IN) :: cutoff
 INTEGER, INTENT(IN) :: numci_ee                ! ee Coulomb integrals
 TYPE( ci_type_real8 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
@@ -179,7 +179,7 @@ DO row= 1, dimhspace
       ueh= 0.
       CALL ADDCI(ueh, ci_eh, ciindex_eh, ni, nj, nk, nl)
 
-      CALL  CHECKELEMENT(elexistes, cutoff, ueh)
+      CALL  CHECKELEMENT(elexists, cutoff, ueh)
 
     ELSE IF (emoved==0 .AND. hmoved==4) THEN   ! *** 2 holes are moved ***
 

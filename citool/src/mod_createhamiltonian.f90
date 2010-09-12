@@ -19,7 +19,7 @@ SUBROUTINE CREATEHAMILTONIAN_X( dimhspace, ket, cutoff,            &
 
 INTEGER, INTENT(IN) :: dimhspace            ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(IN) :: ket(1:,:)  !(dimhspace,2)
-REAL*8,, INTENT(IN) :: cutoff
+REAL*8, INTENT(IN) :: cutoff
 INTEGER, INTENT(IN) :: numci_ee                    ! ee Coulomb integrals
 TYPE( ci_type_complex16 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
@@ -135,7 +135,7 @@ DO row= 1, dimhspace
   ! first elem of a new row, here row=col
   hami(row)= nonzerocount+1 
   ! diag element always present, also if it is zero
-  CALL  ADDELEMENT_X(nonzerocount, row, hamj, ham, -1.0, teth + uee + uhh + ueh)
+  CALL  ADDELEMENT_X(nonzerocount, row, hamj, ham, -1d0, teth + uee + uhh + ueh)
 
   !PPPPPPPPPPPPPPPPPPPPP
   !PRINT*, teth, uee, uhh, ueh, "qqq"
@@ -438,7 +438,7 @@ SUBROUTINE CREATEHAMILTONIAN( dimhspace, ket, cutoff,              &
 
 INTEGER, INTENT(IN) :: dimhspace            ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(IN) :: ket(1:,:)  !(dimhspace,2)
-REAL*8,, INTENT(IN) :: cutoff
+REAL*8, INTENT(IN) :: cutoff
 INTEGER, INTENT(IN) :: numci_ee                ! ee Coulomb integrals
 TYPE( ci_type_real8 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
@@ -552,7 +552,7 @@ DO row= 1, dimhspace
   ! first elem of a new row, here row=col
   hami(row)= nonzerocount+1
   ! diag element always present, also if it is zero
-  CALL  ADDELEMENT(nonzerocount, row, hamj, ham, -1.0, teth + uee + uhh + ueh)
+  CALL  ADDELEMENT(nonzerocount, row, hamj, ham, -1d0, teth + uee + uhh + ueh)
 
   ! calculate following nonzero elems in same row in the upper triangle
   DO col= row+1, dimhspace

@@ -6,8 +6,9 @@ MODULE mod_blockizehamiltonian
 
 CONTAINS
 
-SUBROUTINE BLOCKIZEHAMILTONIAN( dimhspace, ket,                   &
-     &  ciindex_ee, ciindex_hh, ciindex_eh, numblock, blockstart, blocknonzero )
+SUBROUTINE BLOCKIZEHAMILTONIAN( dimhspace, ket, cutoff,            &
+     &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,  &
+     &  numci_eh, ci_eh, ciindex_eh, numblock, blockstart, blocknonzero )
   USE mod_indata
   IMPLICIT NONE
 ! reorders the basis ket(:,:) in order to have an Hamiltonian
@@ -16,8 +17,15 @@ SUBROUTINE BLOCKIZEHAMILTONIAN( dimhspace, ket,                   &
 
 INTEGER, INTENT(IN) :: dimhspace     ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(INOUT) :: ket(:,:)  !(dimhspace,2)
+REAL*8,, INTENT(IN) :: cutoff
+INTEGER, INTENT(IN) :: numci_ee                ! ee Coulomb integrals
+TYPE( ci_type_real8 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
+INTEGER, INTENT(IN) :: numci_hh                ! eh Coulomb integrals
+TYPE( ci_type_real8 ), INTENT(IN) :: ci_hh(:)  !(numci_hh)
 INTEGER, INTENT(IN) :: ciindex_hh(:,:,:,:) !(numspstates_h,numspstates_h,numspstates_h,numspstates_h)
+INTEGER, INTENT(IN) :: numci_eh                ! hh Coulomb integrals
+TYPE( ci_type_real8 ), INTENT(IN) :: ci_eh(:)  !(numci_eh)
 INTEGER, INTENT(IN) :: ciindex_eh(:,:,:,:) !(numspstates_h,numspstates_e,numspstates_e,numspstates_h)
 INTEGER, INTENT(OUT) :: numblock
 INTEGER, INTENT(OUT) :: blockstart(:)  !(dimhspace+1)
@@ -25,16 +33,17 @@ INTEGER, INTENT(OUT) :: blocknonzero(:)  !(dimhspace)
 
 INTEGER :: currentblock
 INTEGER :: colfixed, numprev0
-LOGICAL :: ciexists
+LOGICAL :: elexists
 
 INTEGER :: row, col
 INTEGER*8 :: brae, brah, kete, keth
 INTEGER*8 :: braebit, brahbit, ketebit, kethbit, ketbraexor, ketbrahxor
 INTEGER :: emoved, hmoved
-REAL*8 :: sig
+REAL*8 :: uee, uhh, ueh
 INTEGER :: ni, nj, nk, nl   ! counters on single part states
 
 
+IF (cutoff < 0.) STOP "BLOCKIZEHAMILTONIAN: negative cutoff"
 currentblock= 1
 blocknonzero(:)= 0
 blockstart(1)= 1
@@ -63,7 +72,7 @@ DO row= 1, dimhspace
 
   ! check following nonzero elems in same row in the upper triangle
   DO col= row+1, dimhspace
-    ciexists= .FALSE.
+    elexists= .FALSE.
 
     ! ket for elects
     ! kete= ket_e( (col-1)/dimhspace_h + 1 )
@@ -90,24 +99,28 @@ DO row= 1, dimhspace
         IF ( BTEST(brahbit, nj-1) ) EXIT
       END DO
       
+      uhh= 0.
       DO nk= 1, ni-1
         IF ( BTEST(keth, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_hh, nk, nj, ni, nk)
-          CALL CHECKCI(ciexists, ciindex_hh, nj, nk, ni, nk)
+          CALL ADDCI(uhh, ci_hh, ciindex_hh, nk, nj, ni, nk)
+          CALL SUBCI(uhh, ci_hh, ciindex_hh, nj, nk, ni, nk)
         END IF
       END DO
       DO nk= ni+1, numspstates_h
         IF ( BTEST(keth, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_hh, nj, nk, nk, ni)
-          CALL CHECKCI(ciexists, ciindex_hh, nk, nj, nk, ni)
+          CALL ADDCI(uhh, ci_hh, ciindex_hh, nj, nk, nk, ni)
+          CALL SUBCI(uhh, ci_hh, ciindex_hh, nk, nj, nk, ni)
         END IF
       END DO
 
+      ueh= 0.
       DO nk= 1, numspstates_e
         IF ( BTEST(kete, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_eh, nj, nk, nk, ni)
+          CALL ADDCI(ueh, ci_eh, ciindex_eh, nj, nk, nk, ni)
         END IF
       END DO
+      
+      CALL  CHECKEMENT(elexists, cutoff, uhh + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==0) THEN  ! *** 1 electron is moved ***
 
@@ -119,25 +132,29 @@ DO row= 1, dimhspace
       DO nj= 1, numspstates_e
         IF ( BTEST(braebit, nj-1) ) EXIT
       END DO
-      
+
+      uee= 0.      
       DO nk= 1, ni-1
         IF ( BTEST(kete, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_ee, nk, nj, ni, nk)
-          CALL CHECKCI(ciexists, ciindex_ee, nj, nk, ni, nk)
+          CALL ADDCI(uee, ci_ee, ciindex_ee, nk, nj, ni, nk)
+          CALL SUBCI(uee, ci_ee, ciindex_ee, nj, nk, ni, nk)
         END IF
       END DO
       DO nk= ni+1, numspstates_e
         IF ( BTEST(kete, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_ee, nj, nk, nk, ni)
-          CALL CHECKCI(ciexists, ciindex_ee, nk, nj, nk, ni)
+          CALL ADDCI(uee, ci_ee, ciindex_ee, nj, nk, nk, ni)
+          CALL SUBCI(uee, ci_ee, ciindex_ee, nk, nj, nk, ni)
         END IF
       END DO
 
+      ueh= 0.
       DO nk= 1, numspstates_h
         IF ( BTEST(keth, nk-1) ) THEN
-          CALL CHECKCI(ciexists, ciindex_eh, nk, nj, ni, nk)
+          CALL ADDCI(ueh, ci_eh, ciindex_eh, nk, nj, ni, nk)
         END IF
       END DO
+
+      CALL  CHECKEMENT(elexists, cutoff, uee + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==2) THEN  !*** 1 hole and 1 elec moved ***
       
@@ -159,7 +176,10 @@ DO row= 1, dimhspace
         IF ( BTEST(braebit, nj-1) ) EXIT
       END DO
 
-      CALL CHECKCI(ciexists, ciindex_eh, ni, nj, nk, nl)
+      ueh= 0.
+      CALL ADDCI(ueh, ci_eh, ciindex_eh, ni, nj, nk, nl)
+
+      CALL  CHECKELEMENT(elexistes, cutoff, ueh)
 
     ELSE IF (emoved==0 .AND. hmoved==4) THEN   ! *** 2 holes are moved ***
 
@@ -179,8 +199,11 @@ DO row= 1, dimhspace
         IF ( BTEST(brahbit, ni-1) ) EXIT
       END DO
 
-      CALL CHECKCI(ciexists, ciindex_hh, ni, nj, nk, nl)
-      CALL CHECKCI(ciexists, ciindex_hh, nj, ni, nk, nl)
+      uhh= 0.
+      CALL ADDCI(uhh, ci_hh, ciindex_hh, ni, nj, nk, nl)
+      CALL SUBCI(uhh, ci_hh, ciindex_hh, nj, ni, nk, nl)
+
+      CALL  CHECKELEMENT(elexists, cutoff, uhh)
 
     ELSE IF (emoved==4 .AND. hmoved==0) THEN   ! *** 2 elecs are moved ***
 
@@ -200,18 +223,21 @@ DO row= 1, dimhspace
         IF ( BTEST(braebit, ni-1) ) EXIT
       END DO
 
-      CALL CHECKCI(ciexists, ciindex_ee, ni, nj, nk, nl)
-      CALL CHECKCI(ciexists, ciindex_ee, nj, ni, nk, nl)
+      uee= 0.
+      CALL CHECKCI(uee, ci_ee, ciindex_ee, ni, nj, nk, nl)
+      CALL CHECKCI(uee, ci_ee, ciindex_ee, nj, ni, nk, nl)
+      
+      CALL  CHECKELEMENT(elexists, cutoff, uee)
       
     END IF
 
-    IF ( ciexists ) THEN
+    IF ( elexists ) THEN
       blocknonzero(currentblock)= blocknonzero(currentblock) + 1
     END IF
 
     IF ( col > colfixed ) THEN
 
-      IF ( ciexists ) THEN
+      IF ( elexists ) THEN
         IF ( numprev0 > 0 ) THEN   ! swaps the ket with the first that has 0 coupling
           colfixed= colfixed + 1   ! after clofixed: it sould be in colfixed+1
           kete= ket(col,1)
@@ -252,19 +278,46 @@ numblock= currentblock
 
 CONTAINS
 
-  SUBROUTINE CHECKCI(ciexists, ciindex, n1, n2, n3, n4)
+  SUBROUTINE ADDCI(uu, ci, ciindex, n1, n2, n3, n4)
     IMPLICIT NONE
-    LOGICAL, INTENT(INOUT) :: ciexists
+    REAL*8, INTENT(INOUT) :: uu
+    TYPE( ci_type_real8 ), INTENT(IN) :: ci(:)
     INTEGER, INTENT(IN) :: ciindex(:,:,:,:)
     INTEGER, INTENT(IN) :: n1, n2, n3, n4
 
-    IF (ciindex(n1,n2,n3,n4) /= 0) THEN
-      ciexists= .TRUE.
+    IF (ciindex(n1,n2,n3,n4)>0) THEN
+      uu= uu + ci(ciindex(n1,n2,n3,n4))%v
+    !ELSE IF (ciindex(n1,n2,n3,n4)<0) THEN
+    !  uu= uu + ci(-ciindex(n1,n2,n3,n4))%v
     END IF
+  END SUBROUTINE ADDCI
 
-  END SUBROUTINE CHECKCI
+  SUBROUTINE SUBCI(uu, ci, ciindex, n1, n2, n3, n4)
+    IMPLICIT NONE
+    REAL*8, INTENT(INOUT) :: uu
+    TYPE( ci_type_real8 ), INTENT(IN) :: ci(:)
+    INTEGER, INTENT(IN) :: ciindex(:,:,:,:)
+    INTEGER, INTENT(IN) :: n1, n2, n3, n4
+
+    IF (ciindex(n1,n2,n3,n4)>0) THEN
+      uu= uu - ci(ciindex(n1,n2,n3,n4))%v
+    !ELSE IF (ciindex(n1,n2,n3,n4)<0) THEN
+    !  uu= uu - ci(-ciindex(n1,n2,n3,n4))%v
+    END IF
+  END SUBROUTINE SUBCI
+  
+  SUBROUTINE CHECKELEMENT(elexists, cutoff, val)
+    IMPLICIT NONE
+    LOGICAL, INTENT(INOUT) :: elexists
+    REAL*8, INTENT(IN) :: cutoff
+    REAL*8, INTENT(IN) :: val
+    IF ( ABS(val) > cutoff ) THEN
+      elexists= .TRUE.
+    END IF
+  END SUBROUTINE CHECKELEMENT
 
 
 END SUBROUTINE BLOCKIZEHAMILTONIAN
+
 
 END MODULE mod_blockizehamiltonian

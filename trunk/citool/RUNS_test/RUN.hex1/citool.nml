@@ -9,9 +9,7 @@
                  num_h= 0 ,
                  nummpenergies= 6 ,
                  nummpstates= 6 ,
-                 complexrun= .FALSE. ,
-                 coulelcutoff= 0. ,
-                 matelcutoff= 0.                  /
+                 complexrun= .FALSE.              /
 
 
  &indata_inoutput

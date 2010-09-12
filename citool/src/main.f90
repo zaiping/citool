@@ -76,6 +76,8 @@ REAL*8, ALLOCATABLE :: mpstates(:,:)
 REAL*8, ALLOCATABLE :: mpenergies(:,:)
 
 ! aux vars
+REAL*8 :: tinye
+! counters
 INTEGER :: nn, nb
 ! debug vars
 INTEGER :: ni, nj
@@ -84,6 +86,7 @@ INTEGER :: n1, n2, n3, n4
 
 
 !..........................................init vars definitions and readout
+tinye= TINY(1E1)
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, " == START ==")
 
@@ -281,8 +284,9 @@ CALL LOGGA(2, "reordering the basis for block Hamiltonian...")
 ALLOCATE( blockstart(dimhspace+1) )
 ALLOCATE( blocknonzero(dimhspace) )
 
-CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, ciindex_ee, ciindex_hh, ciindex_eh,  &
-     &                    numblock, blockstart, blocknonzero )
+CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, tinye,                   &
+     &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,  &
+     &  numci_eh, ci_eh, ciindex_eh, numblock, blockstart, blocknonzero )
 
 !!$numblock= 1
 !!$blockstart(1)= 1
@@ -449,12 +453,12 @@ DO nb= 1, numblock
   CALL LOGGA(2, "creating the block H matrix...")
 
   IF ( complexrun ) THEN
-    CALL CREATEHAMILTONIAN_X( blockdim, ket(blockfr:blockto,1:2),  &
+    CALL CREATEHAMILTONIAN_X( blockdim, ket(blockfr:blockto,1:2), tinye,       &
          &  numci_ee, ci_ee_x, ciindex_ee, numci_hh, ci_hh_x, ciindex_hh,      &
          &  numci_eh, ci_eh_x, ciindex_eh, spenergy_e, spenergy_h,             &
          &  blocknonzero(nb), hami, hamj, ham_x )
   ELSE
-    CALL CREATEHAMILTONIAN( blockdim, ket(blockfr:blockto,1:2),  &
+    CALL CREATEHAMILTONIAN( blockdim, ket(blockfr:blockto,1:2), tinye,       &
          &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,        &
          &  numci_eh, ci_eh, ciindex_eh, spenergy_e, spenergy_h,             &
          &  blocknonzero(nb), hami, hamj, ham )

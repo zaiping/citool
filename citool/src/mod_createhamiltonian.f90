@@ -6,7 +6,7 @@ MODULE mod_createhamiltonian
 
 CONTAINS
 
-SUBROUTINE CREATEHAMILTONIAN_X( dimhspace, ket,                    &
+SUBROUTINE CREATEHAMILTONIAN_X( dimhspace, ket, cutoff,            &
      &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,  &
      &  numci_eh, ci_eh, ciindex_eh, spenergy_e, spenergy_h,       &
      &  nonzero, hami, hamj, ham )
@@ -19,6 +19,7 @@ SUBROUTINE CREATEHAMILTONIAN_X( dimhspace, ket,                    &
 
 INTEGER, INTENT(IN) :: dimhspace            ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(IN) :: ket(1:,:)  !(dimhspace,2)
+REAL*8,, INTENT(IN) :: cutoff
 INTEGER, INTENT(IN) :: numci_ee                    ! ee Coulomb integrals
 TYPE( ci_type_complex16 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
@@ -43,8 +44,6 @@ INTEGER :: emoved, hmoved
 COMPLEX*16 :: teth, uee, uhh, ueh
 REAL*8 :: sig
 INTEGER :: ni, nj, nk, nl   ! counters on single part states
-REAL*8 :: tinye
-
 
 !!$
 !!$ ** with blockizehamiltonian this is not necessary: kept for historical reason
@@ -74,7 +73,7 @@ REAL*8 :: tinye
 ! i.e. maxnonzero only includes the upper triangle elements
 !  -- the above calculation is performed in the main parogram --
 
-tinye= TINY(1E1)
+IF (cutoff < 0.) STOP "CREATEHAMILTONIAN_X: negative cutoff"
 nonzerocount= 0
 DO row= 1, dimhspace
   ! before the reordering the total basis was
@@ -136,7 +135,7 @@ DO row= 1, dimhspace
   ! first elem of a new row, here row=col
   hami(row)= nonzerocount+1 
   ! diag element always present, also if it is zero
-  CALL  ADDELEMENT_X(nonzerocount, row, hamj, ham, -tinye, teth + uee + uhh + ueh)
+  CALL  ADDELEMENT_X(nonzerocount, row, hamj, ham, -1.0, teth + uee + uhh + ueh)
 
   !PPPPPPPPPPPPPPPPPPPPP
   !PRINT*, teth, uee, uhh, ueh, "qqq"
@@ -220,7 +219,7 @@ DO row= 1, dimhspace
       END DO
       ueh= sig * ueh
 
-      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, tinye, uhh + ueh)
+      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, cutoff, uhh + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==0) THEN  ! *** 1 electron is moved ***
 
@@ -258,7 +257,7 @@ DO row= 1, dimhspace
       END DO
       ueh= sig * ueh
 
-      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, tinye, uee + ueh)
+      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, cutoff, uee + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==2) THEN  !*** 1 hole and 1 elec moved ***
       
@@ -288,7 +287,7 @@ DO row= 1, dimhspace
       CALL ADDCI_X(ueh, ci_eh, ciindex_eh, ni, nj, nk, nl)
       ueh= sig * ueh
 
-      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, tinye, ueh)
+      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, cutoff, ueh)
 
     ELSE IF (emoved==0 .AND. hmoved==4) THEN   ! *** 2 holes are moved ***
 
@@ -318,7 +317,7 @@ DO row= 1, dimhspace
       CALL SUBCI_X(uhh, ci_hh, ciindex_hh, nj, ni, nk, nl)
       uhh= sig * uhh
 
-      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, tinye, uhh)
+      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, cutoff, uhh)
 
     ELSE IF (emoved==4 .AND. hmoved==0) THEN   ! *** 2 elecs are moved ***
 
@@ -353,7 +352,7 @@ DO row= 1, dimhspace
       CALL SUBCI_X(uee, ci_ee, ciindex_ee, nj, ni, nk, nl)
       uee= sig * uee
 
-      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, tinye, uee)
+      CALL  ADDELEMENT_X(nonzerocount, col, hamj, ham, cutoff, uee)
       
     END IF
 
@@ -426,7 +425,7 @@ END SUBROUTINE CREATEHAMILTONIAN_X
 
 !&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-SUBROUTINE CREATEHAMILTONIAN( dimhspace, ket,                      &
+SUBROUTINE CREATEHAMILTONIAN( dimhspace, ket, cutoff,              &
      &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,  &
      &  numci_eh, ci_eh, ciindex_eh, spenergy_e, spenergy_h,       &
      &  nonzero, hami, hamj, ham )
@@ -439,6 +438,7 @@ SUBROUTINE CREATEHAMILTONIAN( dimhspace, ket,                      &
 
 INTEGER, INTENT(IN) :: dimhspace            ! Hilbert space basis for both elecs and holes
 INTEGER*8, INTENT(IN) :: ket(1:,:)  !(dimhspace,2)
+REAL*8,, INTENT(IN) :: cutoff
 INTEGER, INTENT(IN) :: numci_ee                ! ee Coulomb integrals
 TYPE( ci_type_real8 ), INTENT(IN) :: ci_ee(:)  !(numci_ee)
 INTEGER, INTENT(IN) :: ciindex_ee(:,:,:,:) !(numspstates_e,numspstates_e,numspstates_e,numspstates_e)
@@ -463,7 +463,6 @@ INTEGER :: emoved, hmoved
 REAL*8 :: teth, uee, uhh, ueh
 REAL*8 :: sig
 INTEGER :: ni, nj, nk, nl   ! counters on single part states
-REAL*8 :: tinye
 
 
 !!$
@@ -494,7 +493,7 @@ REAL*8 :: tinye
 ! i.e. maxnonzero only includes the upper triangle elements
 !  -- the above calculation is performed in the main parogram --
 
-tinye= TINY(1E1)
+IF (cutoff < 0.) STOP "CREATEHAMILTONIAN: negative cutoff"
 nonzerocount= 0
 DO row= 1, dimhspace
   ! before the reordering the total basis was
@@ -553,7 +552,7 @@ DO row= 1, dimhspace
   ! first elem of a new row, here row=col
   hami(row)= nonzerocount+1
   ! diag element always present, also if it is zero
-  CALL  ADDELEMENT(nonzerocount, row, hamj, ham, -tinye, teth + uee + uhh + ueh)
+  CALL  ADDELEMENT(nonzerocount, row, hamj, ham, -1.0, teth + uee + uhh + ueh)
 
   ! calculate following nonzero elems in same row in the upper triangle
   DO col= row+1, dimhspace
@@ -628,7 +627,7 @@ DO row= 1, dimhspace
       END DO
       ueh= sig * ueh
 
-      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, tinye, uhh + ueh)
+      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, cutoff, uhh + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==0) THEN  ! *** 1 electron is moved ***
 
@@ -666,7 +665,7 @@ DO row= 1, dimhspace
       END DO
       ueh= sig * ueh
 
-      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, tinye, uee + ueh)
+      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, cutoff, uee + ueh)
 
     ELSE IF (emoved==2 .AND. hmoved==2) THEN  !*** 1 hole and 1 elec moved ***
       
@@ -696,7 +695,7 @@ DO row= 1, dimhspace
       CALL ADDCI(ueh, ci_eh, ciindex_eh, ni, nj, nk, nl)
       ueh= sig * ueh
 
-      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, tinye, ueh)
+      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, cutoff, ueh)
 
     ELSE IF (emoved==0 .AND. hmoved==4) THEN   ! *** 2 holes are moved ***
 
@@ -726,7 +725,7 @@ DO row= 1, dimhspace
       CALL SUBCI(uhh, ci_hh, ciindex_hh, nj, ni, nk, nl)
       uhh= sig * uhh
 
-      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, tinye, uhh)
+      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, cutoff, uhh)
 
     ELSE IF (emoved==4 .AND. hmoved==0) THEN   ! *** 2 elecs are moved ***
 
@@ -761,7 +760,7 @@ DO row= 1, dimhspace
       CALL SUBCI(uee, ci_ee, ciindex_ee, nj, ni, nk, nl)
       uee= sig * uee
 
-      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, tinye, uee)
+      CALL  ADDELEMENT(nonzerocount, col, hamj, ham, cutoff, uee)
       
     END IF
 

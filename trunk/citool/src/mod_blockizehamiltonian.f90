@@ -33,7 +33,6 @@ INTEGER*8 :: braebit, brahbit, ketebit, kethbit, ketbraexor, ketbrahxor
 INTEGER :: emoved, hmoved
 REAL*8 :: sig
 INTEGER :: ni, nj, nk, nl   ! counters on single part states
-REAL*8 :: tinye
 
 
 currentblock= 1

@@ -86,7 +86,7 @@ INTEGER :: n1, n2, n3, n4
 
 
 !..........................................init vars definitions and readout
-tinye= TINY(1E1)
+tinye= TINY(1d1)
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, " == START ==")
 
@@ -208,15 +208,15 @@ CALL LOGGA(2, "...done")
 
 
 
-DO n1 = 1, numspstates_e
-  DO n2= 1, numspstates_e
-    DO n3= 1, numspstates_e
-      DO n4= 1, numspstates_e
-print*, n1, n2, n3, n4, ciindex_ee(n1, n2, n3, n4)
-      END DO
-    END DO
-  END DO
-END DO
+!DO n1 = 1, numspstates_e
+!  DO n2= 1, numspstates_e
+!    DO n3= 1, numspstates_e
+!      DO n4= 1, numspstates_e
+!print*, n1, n2, n3, n4, ciindex_ee(n1, n2, n3, n4)
+!      END DO
+!    END DO
+!  END DO
+!END DO
 
 
 
@@ -300,12 +300,12 @@ CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, tinye,                   &
 !!$print*, " ZZZ "
 !!$!stop
 
-!!$WRITE(44,*) numblock
-!!$WRITE(44,*) blockstart
-!!$WRITE(44,*) blocknonzero
-!!$WRITE(44,*) 
-!!$
-!!$STOP
+WRITE(44,*) numblock
+WRITE(44,*) blockstart
+WRITE(44,*) blocknonzero
+WRITE(44,*) 
+
+STOP
 
 
 CALL LOGGA(2, "...done")

@@ -300,6 +300,9 @@ CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, ciindex_ee, ciindex_hh, ciindex_eh,  &
 !!$WRITE(44,*) blockstart
 !!$WRITE(44,*) blocknonzero
 !!$WRITE(44,*) 
+!!$
+!!$STOP
+
 
 CALL LOGGA(2, "...done")
 CALL LOGGA(2, "number of blocks found= ", numblock)
@@ -458,6 +461,16 @@ DO nb= 1, numblock
   END IF
 
   CALL LOGGA(2, "...done")
+
+  write(55,*)
+  write(55,*) "BLOCK, dim, nonzero", nb, blockdim, blocknonzero(nb)
+  do ni= 1, blockdim
+  write(55,*) 
+    do nj= hami(ni), hami(ni+1)-1
+      write(55,*) ni, hamj(nj), ham(nj) 
+    end do
+  end do
+
 
 !!$  OPEN(33, FILE="hamiltonianIJH.bin", POSITION="APPEND", FORM="UNFORMATTED")
 !!$  WRITE(33) hami

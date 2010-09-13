@@ -232,7 +232,7 @@ DO row= 1, dimhspace
     END IF
 
     IF ( elexists ) THEN
-      print*, "blockize - r c :", row, col
+      print*, "blockize - r c :", row, col   ! nondiagonal elems included
       blocknonzero(currentblock)= blocknonzero(currentblock) + 1
     END IF
 

@@ -86,7 +86,7 @@ INTEGER :: n1, n2, n3, n4
 
 
 !..........................................init vars definitions and readout
-tinye= 0d0  !TINY(1d1)
+tinye= TINY(1d1) !use 0d0 or TINY(1d1) to include or exclude zero elems, respectively 
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, " == START ==")
 

@@ -770,7 +770,7 @@ END DO ! row
 
 hami(dimhspace+1)= nonzerocount + 1
 
-print*, "aaaaaaaaaaaaaaa", nonzerocount, nonzero
+!print*, "aaaaaaaaaaaaaaa", nonzerocount, nonzero
 IF ( nonzerocount /= nonzero ) STOP "CREATEHAMILTONIAN : nonzerocount /= nonzero"
 
 !!$PRINT*, "npm00=", npm00 + dimham

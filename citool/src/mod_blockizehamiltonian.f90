@@ -43,7 +43,7 @@ REAL*8 :: uee, uhh, ueh
 INTEGER :: ni, nj, nk, nl   ! counters on single part states
 
 
-IF (cutoff < 0.) STOP "BLOCKIZEHAMILTONIAN: negative cutoff"
+IF (cutoff < 0d0) STOP "BLOCKIZEHAMILTONIAN: negative cutoff"
 currentblock= 1
 blocknonzero(:)= 0
 blockstart(1)= 1
@@ -232,6 +232,7 @@ DO row= 1, dimhspace
     END IF
 
     IF ( elexists ) THEN
+      print*, "blockize - r c :", row, col
       blocknonzero(currentblock)= blocknonzero(currentblock) + 1
     END IF
 
@@ -300,7 +301,7 @@ CONTAINS
     LOGICAL, INTENT(INOUT) :: elexists
     REAL*8, INTENT(IN) :: cutoff
     REAL*8, INTENT(IN) :: val
-    IF ( ABS(val) > cutoff ) THEN
+    IF ( ABS(val) >= cutoff ) THEN
       elexists= .TRUE.
     END IF
   END SUBROUTINE CHECKELEMENT

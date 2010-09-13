@@ -73,7 +73,7 @@ INTEGER :: ni, nj, nk, nl   ! counters on single part states
 ! i.e. maxnonzero only includes the upper triangle elements
 !  -- the above calculation is performed in the main parogram --
 
-IF (cutoff < 0.) STOP "CREATEHAMILTONIAN_X: negative cutoff"
+IF (cutoff < 0d0) STOP "CREATEHAMILTONIAN_X: negative cutoff"
 nonzerocount= 0
 DO row= 1, dimhspace
   ! before the reordering the total basis was
@@ -412,7 +412,7 @@ CONTAINS
     COMPLEX*16, INTENT(INOUT) :: ham(:)
     REAL*8, INTENT(IN) :: cutoff
     COMPLEX*16, INTENT(IN) :: val
-    IF ( ABS(val) > cutoff ) THEN
+    IF ( ABS(val) >= cutoff ) THEN
       nonzerocount= nonzerocount + 1
       hamj(nonzerocount)= col
       ham(nonzerocount)= val
@@ -493,7 +493,7 @@ INTEGER :: ni, nj, nk, nl   ! counters on single part states
 ! i.e. maxnonzero only includes the upper triangle elements
 !  -- the above calculation is performed in the main parogram --
 
-IF (cutoff < 0.) STOP "CREATEHAMILTONIAN: negative cutoff"
+IF (cutoff < 0d0) STOP "CREATEHAMILTONIAN: negative cutoff"
 nonzerocount= 0
 DO row= 1, dimhspace
   ! before the reordering the total basis was
@@ -820,7 +820,7 @@ CONTAINS
     REAL*8, INTENT(INOUT) :: ham(:)
     REAL*8, INTENT(IN) :: cutoff
     REAL*8, INTENT(IN) :: val
-    IF ( ABS(val) > cutoff ) THEN
+    IF ( ABS(val) >= cutoff ) THEN
       nonzerocount= nonzerocount + 1
       hamj(nonzerocount)= col
       ham(nonzerocount)= val

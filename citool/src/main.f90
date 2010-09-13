@@ -86,7 +86,7 @@ INTEGER :: n1, n2, n3, n4
 
 
 !..........................................init vars definitions and readout
-tinye= TINY(1d1)
+tinye= 0d0  !TINY(1d1)
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, " == START ==")
 
@@ -300,13 +300,12 @@ CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, tinye,                   &
 !!$print*, " ZZZ "
 !!$!stop
 
-WRITE(44,*) numblock
-WRITE(44,*) blockstart
-WRITE(44,*) blocknonzero
-WRITE(44,*) 
-
-STOP
-
+write(44,*) "numblock, blockstart, blocknonzero"
+write(44,*) numblock
+write(44,*) 
+write(44,*) blockstart
+write(44,*) 
+write(44,*) blocknonzero
 
 CALL LOGGA(2, "...done")
 CALL LOGGA(2, "number of blocks found= ", numblock)

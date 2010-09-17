@@ -1,0 +1,215 @@
+ 20GIU2010 20:01:21 +++                  
+ 20GIU2010 20:01:21 +++   ===  START  ===
+ 20GIU2010 20:01:21 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:01:21 ++ number of ELECTRONS:            2
+ 20GIU2010 20:01:21 ++ reads single particle ELEC states          24
+ 20GIU2010 20:01:21 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:03:40 +++                  
+ 20GIU2010 20:03:40 +++   ===  START  ===
+ 20GIU2010 20:03:40 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:03:40 ++ number of ELECTRONS:            2
+ 20GIU2010 20:03:40 ++ reads single particle ELEC states          24
+ 20GIU2010 20:03:40 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:05:32 +++                  
+ 20GIU2010 20:05:32 +++   ===  START  ===
+ 20GIU2010 20:05:32 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:05:32 ++ number of ELECTRONS:            2
+ 20GIU2010 20:05:32 ++ reads single particle ELEC states          24
+ 20GIU2010 20:05:32 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:07:29 +++                  
+ 20GIU2010 20:07:29 +++   ===  START  ===
+ 20GIU2010 20:07:29 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:07:29 ++ number of ELECTRONS:            2
+ 20GIU2010 20:07:29 ++ reads single particle ELEC states          24
+ 20GIU2010 20:07:29 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:10:04 +++                  
+ 20GIU2010 20:10:04 +++   ===  START  ===
+ 20GIU2010 20:10:04 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:10:04 ++ number of ELECTRONS:            2
+ 20GIU2010 20:10:04 ++ reads single particle ELEC states          24
+ 20GIU2010 20:10:04 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:11:20 +++                  
+ 20GIU2010 20:11:20 +++   ===  START  ===
+ 20GIU2010 20:11:20 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:11:20 ++ number of ELECTRONS:            2
+ 20GIU2010 20:11:20 ++ reads single particle ELEC states          24
+ 20GIU2010 20:11:20 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:12:22 +++                  
+ 20GIU2010 20:12:22 +++   ===  START  ===
+ 20GIU2010 20:12:22 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:12:22 ++ number of ELECTRONS:            2
+ 20GIU2010 20:12:22 ++ reads single particle ELEC states          24
+ 20GIU2010 20:12:22 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:13:21 +++                  
+ 20GIU2010 20:13:21 +++   ===  START  ===
+ 20GIU2010 20:13:21 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:13:21 ++ number of ELECTRONS:            2
+ 20GIU2010 20:13:21 ++ reads single particle ELEC states          24
+ 20GIU2010 20:13:21 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:14:33 +++                  
+ 20GIU2010 20:14:33 +++   ===  START  ===
+ 20GIU2010 20:14:33 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:14:33 ++ number of ELECTRONS:            2
+ 20GIU2010 20:14:33 ++ reads single particle ELEC states          24
+ 20GIU2010 20:14:33 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:17:46 +++                  
+ 20GIU2010 20:17:46 +++   ===  START  ===
+ 20GIU2010 20:17:46 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:17:46 ++ number of ELECTRONS:            2
+ 20GIU2010 20:17:46 ++ reads single particle ELEC states          24
+ 20GIU2010 20:17:46 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:18:33 +++                  
+ 20GIU2010 20:18:33 +++   ===  START  ===
+ 20GIU2010 20:18:33 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:18:33 ++ number of ELECTRONS:            2
+ 20GIU2010 20:18:33 ++ reads single particle ELEC states          24
+ 20GIU2010 20:18:33 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:21:17 +++                  
+ 20GIU2010 20:21:17 +++   ===  START  ===
+ 20GIU2010 20:21:17 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:21:17 ++ number of ELECTRONS:            2
+ 20GIU2010 20:21:17 ++ reads single particle ELEC states          24
+ 20GIU2010 20:21:17 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:21:18 ++ number of HOLES:            0
+ 20GIU2010 20:23:25 +++                  
+ 20GIU2010 20:23:25 +++   ===  START  ===
+ 20GIU2010 20:23:25 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:23:25 ++ number of ELECTRONS:            2
+ 20GIU2010 20:23:25 ++ reads single particle ELEC states          24
+ 20GIU2010 20:23:25 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:23:26 ++ number of HOLES:            0
+ 20GIU2010 20:23:26 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 20:23:26 ++                                     RANK           1
+ 20GIU2010 20:23:26 ++ calculating Total ELECTRON density
+ 20GIU2010 20:57:42 +++                  
+ 20GIU2010 20:57:42 +++   ===  START  ===
+ 20GIU2010 20:57:42 ++ total Hilbert space dimension:         276
+ 20GIU2010 20:57:42 ++ number of ELECTRONS:            2
+ 20GIU2010 20:57:42 ++ reads single particle ELEC states          24
+ 20GIU2010 20:57:42 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 20:57:43 ++ number of HOLES:            0
+ 20GIU2010 20:57:43 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 20:57:43 ++                                     RANK           1
+ 20GIU2010 20:57:43 ++ calculating Total ELECTRON density
+ 20GIU2010 21:05:51 +++                  
+ 20GIU2010 21:05:51 +++   ===  START  ===
+ 20GIU2010 21:05:51 ++ total Hilbert space dimension:         276
+ 20GIU2010 21:05:51 ++ number of ELECTRONS:            2
+ 20GIU2010 21:05:51 ++ reads single particle ELEC states          24
+ 20GIU2010 21:05:51 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 21:05:52 ++ number of HOLES:            0
+ 20GIU2010 21:05:52 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 21:05:52 ++                                     RANK           1
+ 20GIU2010 21:05:52 ++ calculating Total ELECTRON density
+ 20GIU2010 21:05:56 ++  ELEC sp SPIN is QN           0
+ 20GIU2010 21:06:42 +++                  
+ 20GIU2010 21:06:42 +++   ===  START  ===
+ 20GIU2010 21:06:42 ++ total Hilbert space dimension:         276
+ 20GIU2010 21:06:42 ++ number of ELECTRONS:            2
+ 20GIU2010 21:06:42 ++ reads single particle ELEC states          24
+ 20GIU2010 21:06:42 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 21:06:43 ++ number of HOLES:            0
+ 20GIU2010 21:06:43 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 21:06:43 ++                                     RANK           1
+ 20GIU2010 21:06:43 ++ calculating Total ELECTRON density
+ 20GIU2010 21:06:47 ++  ELEC sp SPIN is QN           0
+ 20GIU2010 21:07:58 +++                  
+ 20GIU2010 21:07:58 +++   ===  START  ===
+ 20GIU2010 21:07:58 ++ total Hilbert space dimension:         276
+ 20GIU2010 21:07:58 ++ number of ELECTRONS:            2
+ 20GIU2010 21:07:58 ++ reads single particle ELEC states          24
+ 20GIU2010 21:07:58 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 21:07:59 ++ number of HOLES:            0
+ 20GIU2010 21:07:59 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 21:07:59 ++                                     RANK           1
+ 20GIU2010 21:07:59 ++ calculating Total ELECTRON density
+ 20GIU2010 21:08:03 ++  ELEC sp SPIN is QN           0
+ 20GIU2010 21:11:56 +++                  
+ 20GIU2010 21:11:56 +++   ===  START  ===
+ 20GIU2010 21:11:56 ++ total Hilbert space dimension:         276
+ 20GIU2010 21:11:56 ++ number of ELECTRONS:            2
+ 20GIU2010 21:11:56 ++ reads single particle ELEC states          24
+ 20GIU2010 21:11:56 ++ reading single-particle wave functions for ELECs
+ 20GIU2010 21:11:57 ++ number of HOLES:            0
+ 20GIU2010 21:11:57 ++ Total ELECTRON density of mp state BLOCK           2
+ 20GIU2010 21:11:57 ++                                     RANK           1
+ 20GIU2010 21:11:57 ++ calculating Total ELECTRON density
+ 20GIU2010 21:12:01 ++  ELEC sp SPIN is QN           2
+ 20GIU2010 21:12:01 ++ Computing density of sp ELEC SPIN-UP states:
+ 20GIU2010 21:12:01 ++             13
+ 20GIU2010 21:12:01 ++             14
+ 20GIU2010 21:12:01 ++             15
+ 20GIU2010 21:12:01 ++             16
+ 20GIU2010 21:12:01 ++             17
+ 20GIU2010 21:12:01 ++             18
+ 20GIU2010 21:12:01 ++             19
+ 20GIU2010 21:12:01 ++             20
+ 20GIU2010 21:12:01 ++             21
+ 20GIU2010 21:12:01 ++             22
+ 20GIU2010 21:12:01 ++             23
+ 20GIU2010 21:12:01 ++             24
+ 20GIU2010 21:12:01 ++ calculating SPIN UP ELECTRON density
+ 20GIU2010 21:12:04 ++ Computing density of sp ELEC SPIN-DN states:
+ 20GIU2010 21:12:04 ++              1
+ 20GIU2010 21:12:04 ++              2
+ 20GIU2010 21:12:04 ++              3
+ 20GIU2010 21:12:04 ++              4
+ 20GIU2010 21:12:04 ++              5
+ 20GIU2010 21:12:04 ++              6
+ 20GIU2010 21:12:04 ++              7
+ 20GIU2010 21:12:04 ++              8
+ 20GIU2010 21:12:04 ++              9
+ 20GIU2010 21:12:04 ++             10
+ 20GIU2010 21:12:04 ++             11
+ 20GIU2010 21:12:04 ++             12
+ 20GIU2010 21:12:04 ++ calculating SPIN DN ELECTRON density
+ 20GIU2010 21:12:06 +++   == END ==
+ 21GIU2010 15:58:21 +++                  
+ 21GIU2010 15:58:21 +++   ===  START  ===
+ 21GIU2010 15:58:21 ++ total Hilbert space dimension:         276
+ 21GIU2010 15:58:21 ++ number of ELECTRONS:            2
+ 21GIU2010 15:58:21 ++ reads single particle ELEC states          24
+ 21GIU2010 15:58:21 ++ reading single-particle wave functions for ELECs
+ 21GIU2010 15:58:22 ++ number of HOLES:            0
+ 21GIU2010 15:58:22 ++ Total ELECTRON density of mp state BLOCK           2
+ 21GIU2010 15:58:22 ++                                     RANK           1
+ 21GIU2010 15:58:22 ++ calculating Total ELECTRON density
+ 21GIU2010 15:58:27 ++  ELEC sp SPIN is QN           2
+ 21GIU2010 15:58:27 ++ Computing density of sp ELEC SPIN-UP states:
+ 21GIU2010 15:58:27 ++             13
+ 21GIU2010 15:58:27 ++             14
+ 21GIU2010 15:58:27 ++             15
+ 21GIU2010 15:58:27 ++             16
+ 21GIU2010 15:58:27 ++             17
+ 21GIU2010 15:58:27 ++             18
+ 21GIU2010 15:58:27 ++             19
+ 21GIU2010 15:58:27 ++             20
+ 21GIU2010 15:58:27 ++             21
+ 21GIU2010 15:58:27 ++             22
+ 21GIU2010 15:58:27 ++             23
+ 21GIU2010 15:58:27 ++             24
+ 21GIU2010 15:58:27 ++ calculating SPIN UP ELECTRON density
+ 21GIU2010 15:58:29 ++ Computing density of sp ELEC SPIN-DN states:
+ 21GIU2010 15:58:29 ++              1
+ 21GIU2010 15:58:29 ++              2
+ 21GIU2010 15:58:29 ++              3
+ 21GIU2010 15:58:29 ++              4
+ 21GIU2010 15:58:29 ++              5
+ 21GIU2010 15:58:29 ++              6
+ 21GIU2010 15:58:29 ++              7
+ 21GIU2010 15:58:29 ++              8
+ 21GIU2010 15:58:29 ++              9
+ 21GIU2010 15:58:29 ++             10
+ 21GIU2010 15:58:29 ++             11
+ 21GIU2010 15:58:29 ++             12
+ 21GIU2010 15:58:29 ++ calculating SPIN DN ELECTRON density
+ 21GIU2010 15:58:31 +++   == END ==
+ 21GIU2010 16:00:15 +++                  
+ 21GIU2010 16:00:15 +++   ===  START  ===
+ 21GIU2010 16:00:15 ++ total Hilbert space dimension:         276
+ 21GIU2010 16:00:15 ++ number of ELECTRONS:            2
+ 21GIU2010 16:00:15 ++ reads single particle ELEC states          24
+ 21GIU2010 16:00:15 ++ reading single-particle wave functions for ELECs
+ 21GIU2010 16:00:16 ++ number of HOLES:            0
+ 21GIU2010 16:00:16 ++ Total ELECTRON density of mp state BLOCK           2
+ 21GIU2010 16:00:16 ++                                     RANK           1

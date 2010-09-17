@@ -1,0 +1,59 @@
+ 18GIU2010 09:22:57 +++  == START ==
+ 18GIU2010 09:22:57 ++ number of ELECTRONS:            2
+ 18GIU2010 09:22:57 ++ reads single particle ELEC states          24
+ 18GIU2010 09:22:57 ++ number of HOLES:            0
+ 18GIU2010 09:22:57 ++ fictious single part HOLE states considered:           1
+ 18GIU2010 09:22:57 ++ reading and indexing Coulomb integrals...
+ 18GIU2010 09:22:57 ++   real ee Coulomb integrals read       19252
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ elecs Hilbert space dimension:         276
+ 18GIU2010 09:22:57 ++ holes Hilbert space dimension:           1
+ 18GIU2010 09:22:57 ++ total Hilbert space dimension:         276
+ 18GIU2010 09:22:57 ++ creating elecs Hilbert space...
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ creating holes Hilbert space...
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ reordering the basis for block Hamiltonian...
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ number of blocks found=            3
+ 18GIU2010 09:22:57 ++ total number of non-zero elements=        14842
+ 18GIU2010 09:22:57 ++ max dimension of a block=          144
+ 18GIU2010 09:22:57 ++ max number of non-zero elements=        10420
+ 18GIU2010 09:22:57 ++ allocating the block Hamiltonian...
+ 18GIU2010 09:22:57 ++ real Hamiltonian storage (Mb)=~  0.1250400    
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ allocating eigenvectors/values arrays...
+ 18GIU2010 09:22:57 ++ real mp states storage (Mb)=~  8.8320002E-03
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++   block n.            1
+ 18GIU2010 09:22:57 ++ current block H dimension=           66
+ 18GIU2010 09:22:57 ++ current number of non-zero elements=         2211
+ 18GIU2010 09:22:57 ++ creating the block H matrix...
+ 18GIU2010 09:22:57 ++ ...done
+ 18GIU2010 09:22:57 ++ diagonalizing the block Hamiltonian...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ writing multiparticle states...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++   block n.            2
+ 18GIU2010 09:22:58 ++ current block H dimension=          144
+ 18GIU2010 09:22:58 ++ current number of non-zero elements=        10420
+ 18GIU2010 09:22:58 ++ creating the block H matrix...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ diagonalizing the block Hamiltonian...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ writing multiparticle states...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++   block n.            3
+ 18GIU2010 09:22:58 ++ current block H dimension=           66
+ 18GIU2010 09:22:58 ++ current number of non-zero elements=         2211
+ 18GIU2010 09:22:58 ++ creating the block H matrix...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ diagonalizing the block Hamiltonian...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ writing multiparticle states...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ deallocating ci arrays...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 ++ deallocating remaining arrays...
+ 18GIU2010 09:22:58 ++ ...done
+ 18GIU2010 09:22:58 +++  == END ==

@@ -106,7 +106,7 @@ ALLOCATE(spenergy_h(numspstates_h))
 ALLOCATE(masksp_e(numspstates_e))
 ALLOCATE(masksp_h(numspstates_h))
 
-print*, "AAAAAAAAAAAAA"
+!print*, "AAAAAAAAAAAAA"
 
 CALL LOGGA(2, "number of ELECTRONS: ", num_e)
 IF (num_e>0) THEN
@@ -128,7 +128,7 @@ IF (num_h>0) THEN
   CALL INSPWF(numspstates_h, numx_h, psi_h, FILENAMEpsi_h)
 END IF
 
-print*, "BBBBBBBBBBBBBBB"
+!print*, "BBBBBBBBBBBBBBB"
 
 !......................................checks normalization of sp states
 IF (num_e>0) THEN
@@ -204,7 +204,7 @@ ALLOCATE(dens(numx_e))
 !......................................calculating total ELECTRON density
 masksp_e= .TRUE.
 
-stop
+!stop
 
 CALL LOGGA(2, "calculating Total ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &

@@ -1,10 +1,14 @@
 TARGET = ../bin/density4CItool.x
 
 #################################################################
+# keys:  <default>, citest
 #  
-#  
-#  
-#  18 jun 2008      Intel Fortran compiler       by Andrea Bertoni
+# for:  density4CItool
+# created:  17 sep 2010 (in Castello)
+# machine:  gel.act.uji.es (linux cluster)
+# compiler:  ifort 11.1(059)
+# libraries:  
+#                                            by Andrea Bertoni
 #################################################################
 
 ## the command shell
@@ -42,6 +46,7 @@ LLIBS =
 #################################################################
 #      objects files
 #################################################################
+VPATH = ./ ../src/
 
 OBJS =  main.o                     \
         mod_staticdata.o           \

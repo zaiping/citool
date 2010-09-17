@@ -46,7 +46,8 @@ LLIBS =
 #################################################################
 #      objects files
 #################################################################
-VPATH = ./ ../src/
+VPATH = ../src/
+##FPATH= ../src/
 
 OBJS =  main.o                     \
         mod_staticdata.o           \
@@ -64,11 +65,11 @@ OBJS =  main.o                     \
 #################################################################
 
 $(TARGET) : $(OBJS)
-	$(LNK) -o $(TARGET) $(LFLAGS) $^ $(LLIBS)
+	$(LNK) -I $(VPATH) -o $(TARGET) $(LFLAGS) $^ $(LLIBS)
 
 
 %.o : %.f90
-	$(F90) $(F90FLAGS) -c $< -o $@
+	$(F90) -I $(VPATH) $(F90FLAGS) -c $< -o $@
 
 %.o : %.f
 	$(F77) $(F77FLAGS) -c $< -o $@

@@ -10,6 +10,7 @@ SUBROUTINE BLOCKIZEHAMILTONIAN( dimhspace, ket, cutoff,            &
      &  numci_ee, ci_ee, ciindex_ee, numci_hh, ci_hh, ciindex_hh,  &
      &  numci_eh, ci_eh, ciindex_eh, numblock, blockstart, blocknonzero )
   USE mod_indata
+  USE mod_logga
   IMPLICIT NONE
 ! reorders the basis ket(:,:) in order to have an Hamiltonian
 ! with explicit blocks
@@ -50,7 +51,9 @@ blockstart(1)= 1
 colfixed= 1
 
 DO row= 1, dimhspace
-  IF (MOD(row,100) == 0)  print*, "row, dimhspace=", row, dimhspace
+  IF (MOD(row,1000) == 0)  THEN
+    CALL LOGGA(2, "    % completed : ", REAL(row*100)/dimhspace)
+  END IF
   numprev0= 0
   ! colfixed= MAX( colfixed, row )
   IF ( colfixed < row ) THEN
@@ -232,7 +235,7 @@ DO row= 1, dimhspace
     END IF
 
     IF ( elexists ) THEN
-      print*, "blockize - r c :", row, col   ! nondiagonal elems included
+      !print*, "blockize - r c :", row, col
       blocknonzero(currentblock)= blocknonzero(currentblock) + 1
     END IF
 

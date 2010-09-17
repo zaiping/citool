@@ -1,15 +1,10 @@
-TARGET = ../bin/citool.x
-TARGETCITEST = ../bin/generatecitest.x
+TARGET = ../bin/density4CItool.x
 
 #################################################################
-# keys:  <default>, citest
 #  
-# for:  CItool
-# created:  7 sep 2010 (in Castello)
-# machine:  gel.act.uji.es (linux cluster)
-# compiler:  ifort 11.1(059)
-# libraries:  ARPACK (linked with mkl blas/lapack)
-#                                            by Andrea Bertoni
+#  
+#  
+#  18 jun 2008      Intel Fortran compiler       by Andrea Bertoni
 #################################################################
 
 ## the command shell
@@ -24,8 +19,8 @@ CC =
 ## flags to use for fortran 90, fortran 77, C compilation
 # NOTE: with -f77rtl the first column in a namelist is skipped
 #       i.e. the & must be in the second one
-F90FLAGS = -w -C #-O0  # -static -f77rtl -convert big_endian
-F77FLAGS = -w -C #-O0  # -static -f77rtl -convert big_endian
+F90FLAGS = -w -CB -C #-O0  # -static -f77rtl -convert big_endian
+F77FLAGS = -w -CB -C #-O0  # -static -f77rtl -convert big_endian
 CFLAGS =
 
 ## name of the program to link the program units
@@ -35,13 +30,14 @@ LNK = $(F90)
 LFLAGS = $(F90LAGS)
 
 ## LLIBS are libraries to use at link time
-LLIBS =  #  ./lib/libfftw3.0.1.a  # MAH..... fatta col pgi
-LLIBS = -L /home/commenda/lib -larpack_gel-MKL              \
-        -I /opt/intel/Compiler/11.1/059/mkl/include  \
-        -L /opt/intel/Compiler/11.1/059/mkl/lib/32   \
-        -lmkl_intel -lmkl_intel_thread  \
-        -lmkl_core -liomp5 -lpthread -lm
-#LLIBS = -static -L /home/commenda/lib -larpack_gel-MKL
+LLIBS =
+#  ./lib/libfftw3.0.1.a  # MAH..... fatta col pgi
+
+# LLIBS = -L ./lib -larpack_leela_fc8-ifort64v110_mkl              \
+#         -I /opt/intel/Compiler/11.0/074/mkl/include  \
+#         -L /opt/intel/Compiler/11.0/074/mkl/lib/em64t  \
+#         -lmkl_solver_lp64 -lmkl_intel_lp64 -lmkl_intel_thread  \
+#         -lmkl_core -liomp5 -lpthread -lm
 
 #################################################################
 #      objects files
@@ -53,12 +49,9 @@ OBJS =  main.o                     \
         mod_logga.o                \
         mod_myaux.o                \
         mod_specialf.o             \
-        mod_cimakeindex.o          \
-        mod_createhspace.o         \
-	mod_blockizehamiltonian.o  \
-        mod_createhamiltonian.o    \
-	mod_diagonalize.o          \
 	mod_indexx.o               \
+	mod_inoutrs.o              \
+	mod_denscalc.o             \
 	mod_writempstates.o
 
 #################################################################
@@ -80,22 +73,18 @@ clean:
 	rm -f *.mod
 	rm -f $(TARGET)
 
-citest: generatecitest.o mod_staticdata.o mod_indata.o
-	$(LNK) -o $(TARGETCITEST) $(LFLAGS) $^
 
 #################################################################
 #      dependencies
 #################################################################
 
-main.o :                mod_indata.o                  \
-			mod_logga.o                   \
-			mod_myaux.o                   \
-			mod_specialf.o                \
-			mod_cimakeindex.o             \
-			mod_createhspace.o            \
-			mod_blockizehamiltonian.o     \
-			mod_createhamiltonian.o       \
-			mod_diagonalize.o             \
+main.o :                mod_indata.o               \
+			mod_logga.o                \
+			mod_myaux.o                \
+			mod_specialf.o             \
+			mod_indexx.o               \
+			mod_inoutrs.o              \
+			mod_denscalc.o             \
 			mod_writempstates.o
 
 mod_staticdata.o: 
@@ -109,23 +98,10 @@ mod_myaux.o:
 
 mod_specialf.o:
 
-mod_cimakeindex.o:	mod_indata.o
-
-mod_createhspace.o:	mod_specialf.o
-
-mod_blockizehamiltonian.o:	mod_indata.o         \
-				mod_logga.o
-
-mod_createhamiltonian.o:	mod_indata.o
-
-mod_diagonalize.o:	mod_indexx.o
-
 mod_indexx.o:
 
+mod_inoutrs.o:
+
+mod_denscalc.o:
+
 mod_writempstates.o:	mod_indata.o
-
-
-# citest
-
-generatecitest.o:	mod_indata.o
-

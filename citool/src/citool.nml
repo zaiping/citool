@@ -1,0 +1,28 @@
+ &indata_singleparticle
+                 numspstates_e= 24 ,
+                 numspqn_e= 2 ,
+                 numspstates_h= 0 ,
+                 numspqn_h= 0                     /
+
+ &indata_multiparticle
+                 num_e= 6 ,
+                 num_h= 0 ,
+                 nummpenergies= 8 ,
+                 nummpstates= 8 ,
+                 complexrun= .FALSE.              /
+
+
+ &indata_inoutput
+                 filein_spstates_e= "spstates.dat" ,
+                 filein_spstates_h= "" ,
+                 fileinformat_coulomb= "dat real8" ,
+                 filein_coulomb_ee= "Vee.dat" ,
+                 filein_coulomb_hh= "Vhh.dat" ,
+                 filein_coulomb_eh= "Veh.dat" ,
+                 fileoutBIN_hspace= "hspace.bin" ,
+                 fileoutASC_hspace= "hspace.txt" ,
+                 fileoutBIN_mpstates= "mpstates.bin" ,
+                 fileoutASC_mpstates= "mpstates.txt" ,
+                 loglevel= 0 ,
+                 statusfile= "status.txt",
+                 runname= "testhex.1"             /

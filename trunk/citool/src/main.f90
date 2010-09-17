@@ -86,7 +86,9 @@ INTEGER :: n1, n2, n3, n4
 
 
 !..........................................init vars definitions and readout
-tinye= TINY(1d1) !use 0d0 or TINY(1d1) to include or exclude zero elems, respectively 
+tinye= TINY(1d1)
+!print*, "tinye=", tinye
+
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, " == START ==")
 
@@ -264,19 +266,19 @@ DO nn= 1, dimhspace
 END DO
 
 !....................................................prints H space on screen
-WRITE(*,*) "*** elec Hilbert space ***"
-DO nn= 1, dimhspace_e
-  IF ( POPCNT(ket_e(nn)) /= num_e ) STOP "MAIN: 1 bits /= num_e"
-  WRITE(*,binfmt_e) ket_e(nn)
-END DO
-WRITE(*,*)
+!WRITE(*,*) "*** elec Hilbert space ***"
+!DO nn= 1, dimhspace_e
+!  IF ( POPCNT(ket_e(nn)) /= num_e ) STOP "MAIN: 1 bits /= num_e"
+!  WRITE(*,binfmt_e) ket_e(nn)
+!END DO
+!WRITE(*,*)
 
-WRITE(*,*) "*** hole Hilbert space ***"
-DO nn= 1, dimhspace_h
-  IF ( POPCNT(ket_h(nn)) /= num_h ) STOP "MAIN: 1 bits /= num_h"
-  WRITE(*,binfmt_h) ket_h(nn)
-END DO
-WRITE(*,*)
+!WRITE(*,*) "*** hole Hilbert space ***"
+!DO nn= 1, dimhspace_h
+!  IF ( POPCNT(ket_h(nn)) /= num_h ) STOP "MAIN: 1 bits /= num_h"
+!  WRITE(*,binfmt_h) ket_h(nn)
+!END DO
+!WRITE(*,*)
 
 !......................................basis reordering for block Hamiltonian
 CALL LOGGA(2, "reordering the basis for block Hamiltonian...")
@@ -300,12 +302,12 @@ CALL BLOCKIZEHAMILTONIAN( dimhspace, ket, tinye,                   &
 !!$print*, " ZZZ "
 !!$!stop
 
-write(44,*) "numblock, blockstart, blocknonzero"
-write(44,*) numblock
-write(44,*) 
-write(44,*) blockstart
-write(44,*) 
-write(44,*) blocknonzero
+!write(44,*) "numblock, blockstart, blocknonzero"
+!write(44,*) numblock
+!write(44,*) 
+!write(44,*) blockstart
+!write(44,*) 
+!write(44,*) blocknonzero
 
 CALL LOGGA(2, "...done")
 CALL LOGGA(2, "number of blocks found= ", numblock)
@@ -465,14 +467,14 @@ DO nb= 1, numblock
 
   CALL LOGGA(2, "...done")
 
-  write(55,*)
-  write(55,*) "BLOCK, dim, nonzero", nb, blockdim, blocknonzero(nb)
-  do ni= 1, blockdim
-  write(55,*) 
-    do nj= hami(ni), hami(ni+1)-1
-      write(55,*) ni, hamj(nj), ham(nj) 
-    end do
-  end do
+!  write(55,*)
+!  write(55,*) "BLOCK, dim, nonzero", nb, blockdim, blocknonzero(nb)
+!  do ni= 1, blockdim
+!  write(55,*) 
+!    do nj= hami(ni), hami(ni+1)-1
+!      write(55,*) ni, hamj(nj), ham(nj) 
+!    end do
+!  end do
 
 
 !!$  OPEN(33, FILE="hamiltonianIJH.bin", POSITION="APPEND", FORM="UNFORMATTED")
@@ -523,8 +525,8 @@ DO nb= 1, numblock
   !.........................................writes ASC mp energies and states
   CALL LOGGA(2, "writing multiparticle states...")
 
-  print*, "writing mp states of BLOCK", nb
-  print*, "blockfr, blockto=", blockfr, blockto
+!  print*, "writing mp states of BLOCK", nb
+!  print*, "blockfr, blockto=", blockfr, blockto
   IF ( complexrun ) THEN
     CALL WRITEMPSTATES_X( nb, blockdim, ket(blockfr:blockto,1:2),         &
          &  namespqn_e, spqn_e, namespqn_h, spqn_h,                     &

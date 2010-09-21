@@ -48,16 +48,16 @@ LLIBS =
 #################################################################
 VPATH = ../src/
 ##FPATH= ../src/
-
-OBJS =
-main.o                     \
-mod_staticdata.o           \
-mod_indata.o               \
-mod_logga.o                \
-mod_myaux.o                \
-mod_indexx.o               \
-mod_inoutrs.o              \
-mod_denscalc.o
+OBJS =  main.o                     \
+        mod_staticdata.o           \
+        mod_indata.o               \
+        mod_logga.o                \
+        mod_myaux.o                \
+        mod_specialf.o             \
+        mod_indexx.o               \
+        mod_inoutrs.o              \
+        mod_denscalc.o             \
+        mod_writempstates.o
 
 #################################################################
 #      rules 
@@ -83,24 +83,30 @@ clean:
 #      dependencies
 #################################################################
 
-main.o :	mod_indata.o               \
+main.o :                mod_indata.o               \
 			mod_logga.o                \
 			mod_myaux.o                \
+			mod_specialf.o             \
 			mod_indexx.o               \
 			mod_inoutrs.o              \
-			mod_denscalc.o
-			
+			mod_denscalc.o             \
+			mod_writempstates.o
+
 mod_staticdata.o: 
 
-mod_indata.o:	mod_staticdata.o              \
-				mod_myaux.o
+mod_indata.o:		mod_staticdata.o              \
+			mod_myaux.o
 
-mod_logga.o:	mod_indata.o
+mod_logga.o:		mod_indata.o
 
 mod_myaux.o:
+
+mod_specialf.o:
 
 mod_indexx.o:
 
 mod_inoutrs.o:
 
 mod_denscalc.o:
+
+mod_writempstates.o:	mod_indata.o

@@ -43,8 +43,8 @@ CLOSE(33)
 numx= 3*(numh_inoutrs+1)*numh_inoutrs + 1
 ALLOCATE(psi(numx,numspwf))
 nx=0
-DO np= -numh_inoutrs, numh_inoutrs
-  DO nq= -numh_inoutrs, numh_inoutrs
+DO nq= -numh_inoutrs, numh_inoutrs
+  DO np= -numh_inoutrs, numh_inoutrs
     IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
       nx= nx + 1
       psi(nx,1:numspwf/2)= psihex(np,nq,1:numpsi_read)
@@ -73,8 +73,8 @@ OPEN(15, FILE=filename, FORM="FORMATTED")
 WRITE(15,*) numh_inoutrs, dh_inoutrs, numx  ! number of nodes
 
 nx= 0
-DO np= -numh_inoutrs, numh_inoutrs
-  DO nq= -numh_inoutrs, numh_inoutrs
+DO nq= -numh_inoutrs, numh_inoutrs
+  DO np= -numh_inoutrs, numh_inoutrs
     IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
       nx= nx + 1
       WRITE(15,*) np, nq, dens(nx)

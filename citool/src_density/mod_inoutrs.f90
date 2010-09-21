@@ -35,8 +35,8 @@ INTEGER :: np, nq, nx
 OPEN(33, FILE=filename, FORM="UNFORMATTED", ACTION="READ",  &
        &   STATUS="OLD")
 READ(33) numh_inoutrs, numpsi_read, dh_inoutrs
-IF (numpsi_read /= numspwf) STOP "INSPWF: wrong numpsi in psi binary file"
-ALLOCATE(psihex(-numh_inoutrs:numh_inoutrs,-numh_inoutrs:numh_inoutrs,numspwf))
+IF (2*numpsi_read /= numspwf) STOP "INSPWF: wrong numpsi in psi binary file"
+ALLOCATE(psihex(-numh_inoutrs:numh_inoutrs,-numh_inoutrs:numh_inoutrs,numpsi_read))
 READ(33) psihex
 CLOSE(33)
 
@@ -47,7 +47,8 @@ DO np= -numh_inoutrs, numh_inoutrs
   DO nq= -numh_inoutrs, numh_inoutrs
     IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
       nx= nx + 1
-      psi(nx,:)= psihex(np,nq,:)
+      psi(nx,1:numspwf/2)= psihex(np,nq,1:numpsi_read)
+      psi(nx,numspwf/2+1:numspwf)= psihex(np,nq,1:numpsi_read)
     END IF
   END DO
 END DO

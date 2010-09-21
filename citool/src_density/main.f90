@@ -4,11 +4,9 @@ PROGRAM MAIN
   USE mod_indata  !(from CItool program)
   USE mod_logga
   USE mod_myaux
-  USE mod_specialf
   USE mod_indexx
   USE mod_inoutrs
   USE mod_denscalc
-  USE mod_writempstates
   IMPLICIT NONE
 !*************************************************************************
 !* density4CItool  obtains the real-space charge density of the
@@ -110,7 +108,7 @@ IF (num_e>0) THEN
        &  namespqn_e, spqn_e, spenergy_e )
   CALL LOGGA(2, "reading single-particle wave functions for ELECs")
   ! psi_e is allocated inside the routine
-  CALL INSPWF(numspstates_e, numx_e, psi_e, FILENAMEwavefunction_e)
+  CALL INSPWF(numspstates_e, numx_e, psi_e, FILEwavefunction_e)
 END IF
 
 CALL LOGGA(2, "number of HOLES: ", num_h)
@@ -120,7 +118,7 @@ IF (num_h>0) THEN
        &  namespqn_h, spqn_h, spenergy_h )
   CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
   ! psi_h is allocated inside the routine
-  CALL INSPWF(numspstates_h, numx_h, psi_h, FILENAMEwavefunction_h)
+  CALL INSPWF(numspstates_h, numx_h, psi_h, FILEwavefunction_h)
 END IF
 
 !print*, "BBBBBBBBBBBBBBB"
@@ -205,7 +203,7 @@ CALL LOGGA(2, "calculating Total ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILENAMEdensTOTe )
+CALL OUTDENS( numx_e, dens, FILEdensTOTe )
 
 !...................................calculating SPIN density
 ne= 0
@@ -237,7 +235,7 @@ CALL LOGGA(2, "calculating SPIN UP ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILENAMEdensUPe )
+CALL OUTDENS( numx_e, dens, FILEdensUPe )
 
 !...................................calculating SPIN-DN ELECTRON density
 CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
@@ -256,7 +254,7 @@ CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILENAMEdensDNe )
+CALL OUTDENS( numx_e, dens, FILEdensDNe )
 
 DEALLOCATE(dens)
 

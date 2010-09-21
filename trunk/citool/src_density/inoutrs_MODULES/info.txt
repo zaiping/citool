@@ -1,0 +1,11 @@
+This directory contains different modules for the reading of real-space wave functions and writing down of density.
+
+The specific module need should be moved in ../ and renamed mod_inoutrs.f90.
+
+Now available:
+
+mod_inoutrs_jose.f90
+for Jose Movilla single-particle states of nanorods/nanodumbells
+
+mod_inoutrs_hex.f90
+for hexagonal domain and grid

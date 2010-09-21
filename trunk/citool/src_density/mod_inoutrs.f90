@@ -2,19 +2,23 @@
 MODULE mod_inoutrs
 IMPLICIT NONE
 SAVE
+! for HEXAGONAL domain and grid
+! reads the BINARY file for wave functions
 
 ! INPUT params and files
-INTEGER, PARAMETER :: NUMRin= 81, NUMZin=961
-CHARACTER(80), PARAMETER :: FILENAMEwavefunction_e= "wf_all_mz.dat"
-CHARACTER(80), PARAMETER :: FILENAMEwavefunction_h= ""
+CHARACTER(80), PARAMETER :: FILEwavefunction_e= "psi_e.bin"
+CHARACTER(80), PARAMETER :: FILEwavefunction_h= ""
 ! OUTPUT params and files
-INTEGER, PARAMETER :: NUMRout= 81, NUMZout=961
-CHARACTER(80), PARAMETER :: FILENAMEdensTOTe= "densTOTe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensUPe= "densUPe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensDNe= "densDNe.dat"
+CHARACTER(80), PARAMETER :: FILEdensTOTe= "densTOTe.hdat"
+CHARACTER(80), PARAMETER :: FILEdensUPe= "densUPe.hdat"
+CHARACTER(80), PARAMETER :: FILEdensDNe= "densDNe.hdat"
+! vars used in this module alone (values inside the psi file)
+INTEGER :: numh_inoutrs
+REAL*8 :: dh_inoutrs
 
 CONTAINS
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SUBROUTINE INSPWF (numspwf, numx, psi, filename)
 IMPLICIT NONE
 
@@ -23,67 +27,65 @@ INTEGER, INTENT(OUT) :: numx
 REAL*8, ALLOCATABLE, INTENT(OUT) :: psi(:,:)
 CHARACTER(*), INTENT(IN) :: filename
 
-INTEGER :: i, j, k, nnr, nnz
-INTEGER :: n
+REAL*8, ALLOCATABLE :: psihex(:,:,:)
+INTEGER :: numpsi_read
+INTEGER :: np, nq, nx
 
-numx= NUMRin*NUMZin
+!.........................................reads single-particle wave functions
+OPEN(33, FILE=filename, FORM="UNFORMATTED", ACTION="READ",  &
+       &   STATUS="OLD")
+READ(33) numh_inoutrs, numpsi_read, dh_inoutrs
+IF (numpsi_read /= numspwf) STOP "INSPWF: wrong numpsi in psi binary file"
+ALLOCATE(psihex(-numh_inoutrs:numh_inoutrs,-numh_inoutrs:numh_inoutrs,numspwf))
+READ(33) psihex
+CLOSE(33)
 
+numx= 3*(numh_inoutrs+1)*numh_inoutrs + 1
 ALLOCATE(psi(numx,numspwf))
+nx=0
+DO np= -numh_inoutrs, numh_inoutrs
+  DO nq= -numh_inoutrs, numh_inoutrs
+    IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
+      nx= nx + 1
+      psi(nx,:)= psihex(np,nq,:)
+    END IF
+  END DO
+END DO
+IF (nx /= numx) STOP "INSPWF: nx /= num nodes"
 
-write(*,*) "numspwf, NUMR, NUMZ", numspwf, NUMRin, NUMZin
-
-OPEN(UNIT=8, FILE=filename)
-read (8,*)
-read (8,*)
-do k = 1, numspwf/2
-  n= 0
-  do i = 1, NUMRin
-    do j = 1, NUMZin
-      n = n + 1
-      read (8,*) nnr, nnz, psi(n, k)
-      !write (*,*) psi(n, k)
-      if (i /= nnr) STOP "warning..."
-    end do
-    ! write(*,*) "i=", i
-    ! write(*,*) "psi=", psi(n, k)
-  end do
-  read(8,*)
-  write(*,*) "k=", k
-end do
-
-psi(:, numspwf/2+1:numspwf)= psi(:, 1:numspwf/2)
-
-CLOSE(8)
+DEALLOCATE(psihex)
 
 END SUBROUTINE INSPWF
 
-
-
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SUBROUTINE OUTDENS (numx, dens, filename)
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: numx
 REAL*8, INTENT(IN) :: dens(numx) 
 CHARACTER(*), INTENT(IN) :: filename
 
-INTEGER :: i, j, k
-INTEGER :: n
+INTEGER :: np, nq, nx
 
-if (numx /= NUMRout*NUMZout) STOP "error here"
+IF (numx /= 3*(numh_inoutrs+1)*numh_inoutrs + 1) STOP "OUTDENS: numx /= num nodes"
 
-OPEN(UNIT=15, FILE=filename)
+OPEN(15, FILE=filename, FORM="FORMATTED")
+WRITE(15,*) numh_inoutrs, dh_inoutrs, numx  ! number of nodes
 
-n= 0
-do i = 1, NUMRout
-  do j = 1, NUMZout
-     n = n + 1
-     write (15,*) i, j, dens(n)
-  end do
-  write (15,*)
-end do
+nx= 0
+DO np= -numh_inoutrs, numh_inoutrs
+  DO nq= -numh_inoutrs, numh_inoutrs
+    IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
+      nx= nx + 1
+      WRITE(15,*) np, nq, dens(nx)
+    END IF
+  END DO
+END DO
+IF (nx /= numx) STOP "OUTDENS: nx /= num nodes"
 
 CLOSE(15)
 
 END SUBROUTINE OUTDENS
+
 
 END MODULE mod_inoutrs
 

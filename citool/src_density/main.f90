@@ -21,11 +21,6 @@ PROGRAM MAIN
 !*************************************************************************
 
 INTEGER :: WANTBLOCK= 0 , WANTRANK= 0 
-CHARACTER(80), PARAMETER :: FILENAMEpsi_e= "wf_all_mz.dat"
-CHARACTER(80), PARAMETER :: FILENAMEpsi_h= "wfh.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensTOTe= "densTOTe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensUPe= "densUPe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensDNe= "densDNe.dat"
 
 INTEGER :: numblock, dimhspace
 INTEGER, ALLOCATABLE :: blockstart(:)
@@ -115,7 +110,7 @@ IF (num_e>0) THEN
        &  namespqn_e, spqn_e, spenergy_e )
   CALL LOGGA(2, "reading single-particle wave functions for ELECs")
   ! psi_e is allocated inside the routine
-  CALL INSPWF(numspstates_e, numx_e, psi_e, FILENAMEpsi_e)
+  CALL INSPWF(numspstates_e, numx_e, psi_e, FILENAMEwavefunction_e)
 END IF
 
 CALL LOGGA(2, "number of HOLES: ", num_h)
@@ -125,7 +120,7 @@ IF (num_h>0) THEN
        &  namespqn_h, spqn_h, spenergy_h )
   CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
   ! psi_h is allocated inside the routine
-  CALL INSPWF(numspstates_h, numx_h, psi_h, FILENAMEpsi_h)
+  CALL INSPWF(numspstates_h, numx_h, psi_h, FILENAMEwavefunction_h)
 END IF
 
 !print*, "BBBBBBBBBBBBBBB"

@@ -4,6 +4,7 @@ PROGRAM MAIN
   USE mod_indata  !(from CItool program)
   USE mod_logga
   USE mod_myaux
+  USE mod_specialf
   USE mod_indexx
   USE mod_inoutrs
   USE mod_denscalc

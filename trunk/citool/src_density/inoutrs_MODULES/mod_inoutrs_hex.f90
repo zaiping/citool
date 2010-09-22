@@ -6,9 +6,6 @@ SAVE
 ! reads the BINARY file for wave functions
 
 INTEGER :: WANTBLOCK= 0 , WANTRANK= 0
-LOGICAL :: COMPUTE_eTOT= .TRUE.
-LOGICAL :: COMPUTE_eSPINUP= .TRUE.
-LOGICAL :: COMPUTE_eSPINDN= .TRUE.
 
 ! INPUT params and files
 CHARACTER(80), PARAMETER :: FILEwavefunction_e= "psi_e.bin"

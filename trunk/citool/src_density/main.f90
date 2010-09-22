@@ -262,7 +262,7 @@ CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensDNe, densitysum )
+CALL OUTDENS( numx_e, dens, FILEdensDNe, denssum )
 CALL LOGGA(2, "integrated spin Down density=", denssum)
 
 DEALLOCATE(dens)

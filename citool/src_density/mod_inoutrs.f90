@@ -80,6 +80,7 @@ DO nq= -numh_inoutrs, numh_inoutrs
       WRITE(15,*) np, nq, dens(nx)
     END IF
   END DO
+  WRITE(15,*)
 END DO
 IF (nx /= numx) STOP "OUTDENS: nx /= num nodes"
 

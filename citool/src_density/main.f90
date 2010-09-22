@@ -54,9 +54,10 @@ INTEGER :: ns, nx, nb, ne
 !.........................................init vars definitions and readout
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, "                 ")
-CALL LOGGA(3, "  ===  START  ===")
+CALL LOGGA(3, "  ===  START density4CItool ===")
 
 !...................................reads the reordered total Hilbert space
+CALL LOGGA(3, "reading Hilbert space from "//TRIM(fileoutBIN_hspace))
 OPEN(22, FILE=TRIM(fileoutBIN_hspace), ACTION="READ", FORM="UNFORMATTED")
 
 READ(22) string80
@@ -77,6 +78,7 @@ IF (dimhspace /= BINOMIALCO(numspstates_e,num_e)*BINOMIALCO(numspstates_h,num_h)
 CALL LOGGA(2, "total Hilbert space dimension:", dimhspace)
 
 !..........................................reads the multi-carrier states
+CALL LOGGA(3, "reading multi-carrier states from "//TRIM(fileoutBIN_mpstates))
 ALLOCATE( mpenergies(nummpenergies,numblock) )
 ALLOCATE( mpstates(dimhspace,nummpstates) )
 
@@ -126,28 +128,29 @@ END IF
 
 !......................................checks normalization of sp states
 IF (num_e>0) THEN
-  PRINT*, " norm electrons"
+  CALL LOGGA(2, "normalization of ELEC sp states")
   DO ns= 1, numspstates_e
     normsum= 0.
     DO nx= 1, numx_e
       normsum= normsum + ABS( psi_e(nx,ns) )**2
     END DO
-    PRINT*, "ns, norm", ns, normsum
+    CALL LOGGA(2, " norm of state "//STRING(3,ns), normsum)
   END DO
 END IF
 
 IF (num_h>0) THEN
-  PRINT*, " norm holes"
+  CALL LOGGA(2, "normalization of HOLE sp states")
   DO ns= 1, numspstates_h
     normsum= 0.
     DO nx= 1, numx_h
       normsum= normsum + ABS( psi_h(nx,ns) )**2
     END DO
-    PRINT*, "ns, norm", ns, normsum
+    CALL LOGGA(2, " norm of state "//STRING(3,ns), normsum)
   END DO
 END IF
 
 !..........................finds the mp states order with increasing energy
+CALL LOGGA(2, "finding the mp states order with increasing energy")
 ALLOCATE(ene_mpene(numblock*nummpenergies))
 ALLOCATE(nblock_mpene(numblock*nummpenergies))
 ALLOCATE(nrank_mpene(numblock*nummpenergies))
@@ -172,8 +175,10 @@ END DO
 CALL indexx(nmpene, ene_mpene, indx_mpene)
 
 DO ne= 1, nmpene
-  PRINT*, "n , ENERGY, BLOCK, RANK:", ne, REAL(ene_mpene(indx_mpene(ne))),   &
-       &  nblock_mpene(indx_mpene(ne)), nrank_mpene(indx_mpene(ne))
+  CALL LOGGA(2, " BLOCK: "//STRING(4,nblock_mpene(indx_mpene(ne))//     &
+     & "  RANK: "//nrank_mpene(indx_mpene(ne))//" energy:", REAL(ene_mpene(indx_mpene(ne))))
+  !PRINT*, "n , ENERGY, BLOCK, RANK:", ne, REAL(ene_mpene(indx_mpene(ne))),   &
+  !     &  nblock_mpene(indx_mpene(ne)), nrank_mpene(indx_mpene(ne))
 END DO
 
 !..........................................decides which mp state to consider
@@ -198,8 +203,6 @@ ALLOCATE(dens(numx_e))
 !......................................calculating total ELECTRON density
 masksp_e= .TRUE.
 
-!stop
-
 CALL LOGGA(2, "calculating Total ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
@@ -209,15 +212,15 @@ CALL OUTDENS( numx_e, dens, FILEdensTOTe )
 !...................................calculating SPIN density
 ne= 0
 DO nx= 1, numspqn_e
-  print*, namespqn_e(nx)
+  !print*, namespqn_e(nx)
   IF (INDEX(namespqn_e(nx),"spin") /= 0) THEN
-    print*, "zzzz"
+    !print*, "zzzz"
     ne= ne*9999 + nx
   END IF
 END DO
-!IF (ne < 1 .OR. ne > 9999) STOP "no or multiple spin sp qn"
+IF (ne < 1 .OR. ne > 9999) STOP "no or multiple spin sp qn"
 CALL LOGGA(2, " ELEC sp SPIN is QN", ne)
-print*, namespqn_e(:)
+!print*, namespqn_e(:)
 
 !...................................calculating SPIN-UP ELECTRON density
 CALL LOGGA(2, "Computing density of sp ELEC SPIN-UP states:")

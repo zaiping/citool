@@ -7,7 +7,7 @@ TARGET = ../bin/density4CItool.x
 # created:  17 sep 2010 (in Castello)
 # machine:  gel.act.uji.es (linux cluster)
 # compiler:  ifort 11.1(059)
-# libraries:  
+# libraries:   
 #                                            by Andrea Bertoni
 #################################################################
 

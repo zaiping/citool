@@ -49,7 +49,7 @@ INTEGER, ALLOCATABLE :: indx_mpene(:)
 REAL*8, ALLOCATABLE :: dens(:)
 INTEGER :: wantblockdim, wantblockfr, wantblockto
 CHARACTER(80) :: string80
-REAL*8 :: normsum
+REAL*8 :: normsum, denssum
 INTEGER :: ns, nx, nb, ne
 
 !.........................................init vars definitions and readout
@@ -209,7 +209,8 @@ CALL LOGGA(2, "calculating Total ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensTOTe )
+CALL OUTDENS( numx_e, dens, FILEdensTOTe, denssum )
+CALL LOGGA(2, "integrated Total density=", denssum)
 
 !...................................calculating SPIN density
 ne= 0
@@ -241,7 +242,8 @@ CALL LOGGA(2, "calculating SPIN UP ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensUPe )
+CALL OUTDENS( numx_e, dens, FILEdensUPe, denssum )
+CALL LOGGA(2, "integrated spin Up density=", denssum)
 
 !...................................calculating SPIN-DN ELECTRON density
 CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
@@ -260,7 +262,8 @@ CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
 CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
      &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
      &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensDNe )
+CALL OUTDENS( numx_e, dens, FILEdensDNe, densitysum )
+CALL LOGGA(2, "integrated spin Down density=", denssum)
 
 DEALLOCATE(dens)
 

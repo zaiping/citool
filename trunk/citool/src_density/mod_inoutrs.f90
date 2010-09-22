@@ -28,6 +28,7 @@ REAL*8, ALLOCATABLE, INTENT(OUT) :: psi(:,:)
 CHARACTER(*), INTENT(IN) :: filename
 
 REAL*8, ALLOCATABLE :: psihex(:,:,:)
+REAL*8 :: constnorm
 INTEGER :: numpsi_read
 INTEGER :: np, nq, nx
 
@@ -40,6 +41,7 @@ ALLOCATE(psihex(-numh_inoutrs:numh_inoutrs,-numh_inoutrs:numh_inoutrs,numpsi_rea
 READ(33) psihex
 CLOSE(33)
 
+constnorm= SQRT( SQRT(3./4.)*dh_inoutrs*dh_inoturs )
 numx= 3*(numh_inoutrs+1)*numh_inoutrs + 1
 ALLOCATE(psi(numx,numspwf))
 nx=0
@@ -47,8 +49,8 @@ DO nq= -numh_inoutrs, numh_inoutrs
   DO np= -numh_inoutrs, numh_inoutrs
     IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
       nx= nx + 1
-      psi(nx,1:numspwf/2)= psihex(np,nq,1:numpsi_read)
-      psi(nx,numspwf/2+1:numspwf)= psihex(np,nq,1:numpsi_read)
+      psi(nx,1:numspwf/2)= constnorm * psihex(np,nq,1:numpsi_read)
+      psi(nx,numspwf/2+1:numspwf)= constnorm * psihex(np,nq,1:numpsi_read)
     END IF
   END DO
 END DO

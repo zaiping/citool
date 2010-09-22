@@ -6,6 +6,7 @@ PROGRAM MAIN
   USE mod_myaux
   USE mod_specialf
   USE mod_indexx
+  USE mod_specialf
   USE mod_inoutrs
   USE mod_denscalc
   IMPLICIT NONE
@@ -134,7 +135,7 @@ IF (num_e>0) THEN
     DO nx= 1, numx_e
       normsum= normsum + ABS( psi_e(nx,ns) )**2
     END DO
-    CALL LOGGA(2, " norm of state "//STRING(3,ns), normsum)
+    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
   END DO
 END IF
 
@@ -145,7 +146,7 @@ IF (num_h>0) THEN
     DO nx= 1, numx_h
       normsum= normsum + ABS( psi_h(nx,ns) )**2
     END DO
-    CALL LOGGA(2, " norm of state "//STRING(3,ns), normsum)
+    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
   END DO
 END IF
 
@@ -175,8 +176,9 @@ END DO
 CALL indexx(nmpene, ene_mpene, indx_mpene)
 
 DO ne= 1, nmpene
-  CALL LOGGA(2, " BLOCK: "//STRING(4,nblock_mpene(indx_mpene(ne))//     &
-     & "  RANK: "//nrank_mpene(indx_mpene(ne))//" energy:", REAL(ene_mpene(indx_mpene(ne))))
+  CALL LOGGA(2, " BLOCK: "//STRING(nblock_mpene(indx_mpene(ne)),4)//     &
+     &          "  RANK: "//STRING(nrank_mpene(indx_mpene(ne)),4)//        &
+     &          " energy:", REAL(ene_mpene(indx_mpene(ne))))
   !PRINT*, "n , ENERGY, BLOCK, RANK:", ne, REAL(ene_mpene(indx_mpene(ne))),   &
   !     &  nblock_mpene(indx_mpene(ne)), nrank_mpene(indx_mpene(ne))
 END DO

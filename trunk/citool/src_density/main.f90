@@ -201,7 +201,7 @@ CALL LOGGA(2, "ELECTRON density of mp state RANK ", WANTRANK)
 ALLOCATE(dens(numx_e))
 
 !......................................calculating total ELECTRON density
-IF (COMPUTE_eTOT) THEN
+IF (FILEdensTOTe /= "") THEN
   masksp_e= .TRUE.
 
   CALL LOGGA(2, "calculating Total ELECTRON density")
@@ -213,7 +213,7 @@ IF (COMPUTE_eTOT) THEN
 END IF
 
 !...................................finding SPIN quantum number
-IF (COMPUTE_eSPINUP .OR. COMPUTE_eSPINDN) THEN
+IF (FILEdensUPe /= "" .OR. FILEdensDNe /= "") THEN
   ne= 0
   DO nx= 1, numspqn_e
     !print*, namespqn_e(nx)
@@ -228,7 +228,7 @@ IF (COMPUTE_eSPINUP .OR. COMPUTE_eSPINDN) THEN
 END IF
 
 !...................................calculating SPIN-UP ELECTRON density
-IF (COMPUTE_eSPINUP) THEN
+IF (FILEdensUPe /= "") THEN
   CALL LOGGA(2, "Computing density of sp ELEC SPIN-UP states:")
   DO ns= 1, numspstates_e
     IF (spqn_e(ns,ne)==1) THEN
@@ -250,7 +250,7 @@ IF (COMPUTE_eSPINUP) THEN
 END IF
 
 !...................................calculating SPIN-DN ELECTRON density
-IF (COMPUTE_eSPINDN) THEN
+IF (FILEdensDNe /= "") THEN
   CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
   DO ns= 1, numspstates_e
     IF (spqn_e(ns,ne)==0) THEN

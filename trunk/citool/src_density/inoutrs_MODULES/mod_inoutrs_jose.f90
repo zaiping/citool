@@ -5,19 +5,16 @@ SAVE
 ! for nanodumbbells
 
 INTEGER :: WANTBLOCK= 0 , WANTRANK= 0
-LOGICAL :: COMPUTE_eTOT= .TRUE.
-LOGICAL :: COMPUTE_eSPINUP= .TRUE.
-LOGICAL :: COMPUTE_eSPINDN= .TRUE.
 
 ! INPUT params and files
 INTEGER, PARAMETER :: NUMRin= 81, NUMZin=961
-CHARACTER(80), PARAMETER :: FILENAMEwavefunction_e= "wf_all_mz.dat"
-CHARACTER(80), PARAMETER :: FILENAMEwavefunction_h= ""
+CHARACTER(80), PARAMETER :: FILEwavefunction_e= "wf_all_mz.dat"
+CHARACTER(80), PARAMETER :: FILEwavefunction_h= ""
 ! OUTPUT params and files
 INTEGER, PARAMETER :: NUMRout= 81, NUMZout=961
-CHARACTER(80), PARAMETER :: FILENAMEdensTOTe= "densTOTe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensUPe= "densUPe.dat"
-CHARACTER(80), PARAMETER :: FILENAMEdensDNe= "densDNe.dat"
+CHARACTER(80), PARAMETER :: FILEdensTOTe= "densTOTe.dat"
+CHARACTER(80), PARAMETER :: FILEdensUPe= "densUPe.dat"
+CHARACTER(80), PARAMETER :: FILEdensDNe= "densDNe.dat"
 
 CONTAINS
 
@@ -47,7 +44,7 @@ do nk = 1, numspwf/2
   do ni = 1, NUMRin
     do nj = 1, NUMZin
       nn = nn + 1
-      read (8,*) nnr, nnz, psi(nn, kn)
+      read (8,*) nnr, nnz, psi(nn, nk)
       !write (*,*) psi(n, k)
       if (ni /= nnr) STOP "warning..."
     end do

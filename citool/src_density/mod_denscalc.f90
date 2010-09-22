@@ -36,7 +36,7 @@ INTEGER :: nx
 
 ALLOCATE( matcc(numspstates_C, numspstates_C) )
 
-tinye= TINY(1E1)
+tinye= 2*TINY(1E1)
 dens= 0d0
 
 DO nl= 1, blockdim

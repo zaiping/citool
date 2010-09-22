@@ -30,12 +30,13 @@ REAL*8, INTENT(OUT) :: dens(:)      !(numx)
 
 INTEGER, ALLOCATABLE :: matcc(:,:)
 INTEGER*8 :: klef, krig
-REAL*8 :: sign, clcl
+REAL*8 :: tinye, sign, clcl
 INTEGER :: nl, nlp, ns, nsp, nb
 INTEGER :: nx
 
 ALLOCATE( matcc(numspstates_C, numspstates_C) )
 
+tinye= TINY(1E1)
 dens= 0d0
 
 DO nl= 1, blockdim
@@ -46,6 +47,7 @@ DO nl= 1, blockdim
     !PRINT*, "nl, nl' =", nl, nlp
 
     clcl= mpstate(nl)*mpstate(nlp)
+    IF (ABS(clcl) <= tinye) CYCLE
 
     matcc= 0
     DO ns= 1, numspstates_C

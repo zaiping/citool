@@ -2,6 +2,12 @@
 MODULE mod_inoutrs
 IMPLICIT NONE
 SAVE
+! for nanodumbbells
+
+INTEGER :: WANTBLOCK= 0 , WANTRANK= 0
+LOGICAL :: COMPUTE_eTOT= .TRUE.
+LOGICAL :: COMPUTE_eSPINUP= .TRUE.
+LOGICAL :: COMPUTE_eSPINDN= .TRUE.
 
 ! INPUT params and files
 INTEGER, PARAMETER :: NUMRin= 81, NUMZin=961
@@ -15,6 +21,7 @@ CHARACTER(80), PARAMETER :: FILENAMEdensDNe= "densDNe.dat"
 
 CONTAINS
 
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SUBROUTINE INSPWF (numspwf, numx, psi, filename)
 IMPLICIT NONE
 
@@ -23,32 +30,32 @@ INTEGER, INTENT(OUT) :: numx
 REAL*8, ALLOCATABLE, INTENT(OUT) :: psi(:,:)
 CHARACTER(*), INTENT(IN) :: filename
 
-INTEGER :: i, j, k, nnr, nnz
-INTEGER :: n
+INTEGER :: ni, nj, nk, nnr, nnz
+INTEGER :: nn
 
 numx= NUMRin*NUMZin
 
 ALLOCATE(psi(numx,numspwf))
 
-write(*,*) "numspwf, NUMR, NUMZ", numspwf, NUMRin, NUMZin
+!write(*,*) "numspwf, NUMR, NUMZ", numspwf, NUMRin, NUMZin
 
 OPEN(UNIT=8, FILE=filename)
 read (8,*)
 read (8,*)
-do k = 1, numspwf/2
-  n= 0
-  do i = 1, NUMRin
-    do j = 1, NUMZin
-      n = n + 1
-      read (8,*) nnr, nnz, psi(n, k)
+do nk = 1, numspwf/2
+  nn= 0
+  do ni = 1, NUMRin
+    do nj = 1, NUMZin
+      nn = nn + 1
+      read (8,*) nnr, nnz, psi(nn, kn)
       !write (*,*) psi(n, k)
-      if (i /= nnr) STOP "warning..."
+      if (ni /= nnr) STOP "warning..."
     end do
     ! write(*,*) "i=", i
     ! write(*,*) "psi=", psi(n, k)
   end do
   read(8,*)
-  write(*,*) "k=", k
+!  write(*,*) "k=", nk
 end do
 
 psi(:, numspwf/2+1:numspwf)= psi(:, 1:numspwf/2)
@@ -57,26 +64,28 @@ CLOSE(8)
 
 END SUBROUTINE INSPWF
 
-
-
-SUBROUTINE OUTDENS (numx, dens, filename)
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SUBROUTINE OUTDENS (numx, dens, filename, denssum)
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: numx
 REAL*8, INTENT(IN) :: dens(numx) 
 CHARACTER(*), INTENT(IN) :: filename
+REAL*8, INTENT(OUT) :: denssum
 
-INTEGER :: i, j, k
-INTEGER :: n
+INTEGER :: ni, nj, nk
+INTEGER :: nn
 
 if (numx /= NUMRout*NUMZout) STOP "error here"
 
 OPEN(UNIT=15, FILE=filename)
 
-n= 0
-do i = 1, NUMRout
-  do j = 1, NUMZout
-     n = n + 1
-     write (15,*) i, j, dens(n)
+denssum= 0.
+nn= 0
+do ni = 1, NUMRout
+  do nj = 1, NUMZout
+     nn = nn + 1
+     write (15,*) ni, nj, dens(nn)
+     denssum= denssum + dens(nn)
   end do
   write (15,*)
 end do

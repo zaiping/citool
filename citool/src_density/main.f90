@@ -20,8 +20,6 @@ PROGRAM MAIN
 !*  11 jun 2010 - 14 jun 2010     ifort 11 compiler      by Andrea Bertoni
 !*************************************************************************
 
-INTEGER :: WANTBLOCK= 0 , WANTRANK= 0 
-
 INTEGER :: numblock, dimhspace
 INTEGER, ALLOCATABLE :: blockstart(:)
 INTEGER*8, ALLOCATABLE :: ket(:,:)       ! Slater dets for both e and h
@@ -197,73 +195,81 @@ wantblockto= blockstart(WANTBLOCK+1)-1
 
 !:::::::::::::::::::::::::::::::::::::::::: ELEC density calculation  :::::::
 
-CALL LOGGA(2, "Total ELECTRON density of mp state BLOCK", WANTBLOCK)
-CALL LOGGA(2, "                                    RANK", WANTRANK)
+CALL LOGGA(2, "ELECTRON density of mp state BLOCK", WANTBLOCK)
+CALL LOGGA(2, "ELECTRON density of mp state RANK ", WANTRANK)
 
 ALLOCATE(dens(numx_e))
 
 !......................................calculating total ELECTRON density
-masksp_e= .TRUE.
+IF (COMPUTE_eTOT) THEN
+  masksp_e= .TRUE.
 
-CALL LOGGA(2, "calculating Total ELECTRON density")
-CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
-     &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-     &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensTOTe, denssum )
-CALL LOGGA(2, "integrated Total density=", denssum)
+  CALL LOGGA(2, "calculating Total ELECTRON density")
+  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
+       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
+       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
+  CALL OUTDENS( numx_e, dens, FILEdensTOTe, denssum )
+  CALL LOGGA(2, "integrated Total density=", denssum)
+END IF
 
-!...................................calculating SPIN density
-ne= 0
-DO nx= 1, numspqn_e
-  !print*, namespqn_e(nx)
-  IF (INDEX(namespqn_e(nx),"spin") /= 0) THEN
-    !print*, "zzzz"
-    ne= ne*9999 + nx
-  END IF
-END DO
-IF (ne < 1 .OR. ne > 9999) STOP "no or multiple spin sp qn"
-CALL LOGGA(2, " ELEC sp SPIN is QN", ne)
-!print*, namespqn_e(:)
+!...................................finding SPIN quantum number
+IF (COMPUTE_eSPINUP .OR. COMPUTE_eSPINDN) THEN
+  ne= 0
+  DO nx= 1, numspqn_e
+    !print*, namespqn_e(nx)
+    IF (INDEX(namespqn_e(nx),"spin") /= 0) THEN
+      !print*, "zzzz"
+      ne= ne*9999 + nx
+    END IF
+  END DO
+  IF (ne < 1 .OR. ne > 9999) STOP "no or multiple spin sp qn"
+  CALL LOGGA(2, " ELEC sp SPIN is QN", ne)
+  !print*, namespqn_e(:)
+END IF
 
 !...................................calculating SPIN-UP ELECTRON density
-CALL LOGGA(2, "Computing density of sp ELEC SPIN-UP states:")
-DO ns= 1, numspstates_e
-  IF (spqn_e(ns,ne)==1) THEN
-    masksp_e(ns)= .TRUE.
-    CALL LOGGA(2, "  ", ns)
-  ELSE IF (spqn_e(ns,ne)==0) THEN
-    masksp_e(ns)= .FALSE.
-  ELSE
-    STOP "spin QN /= 0 or 1 in sp file"
-  END IF
-END DO
+IF (COMPUTE_eSPINUP) THEN
+  CALL LOGGA(2, "Computing density of sp ELEC SPIN-UP states:")
+  DO ns= 1, numspstates_e
+    IF (spqn_e(ns,ne)==1) THEN
+      masksp_e(ns)= .TRUE.
+      CALL LOGGA(2, "  ", ns)
+    ELSE IF (spqn_e(ns,ne)==0) THEN
+      masksp_e(ns)= .FALSE.
+    ELSE
+      STOP "spin QN /= 0 or 1 in sp file"
+    END IF
+  END DO
 
-CALL LOGGA(2, "calculating SPIN UP ELECTRON density")
-CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
-     &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-     &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensUPe, denssum )
-CALL LOGGA(2, "integrated spin Up density=", denssum)
+  CALL LOGGA(2, "calculating SPIN UP ELECTRON density")
+  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
+       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
+       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
+  CALL OUTDENS( numx_e, dens, FILEdensUPe, denssum )
+  CALL LOGGA(2, "integrated spin Up density=", denssum)
+END IF
 
 !...................................calculating SPIN-DN ELECTRON density
-CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
-DO ns= 1, numspstates_e
-  IF (spqn_e(ns,ne)==0) THEN
-    masksp_e(ns)= .TRUE.
-    CALL LOGGA(2, "  ", ns)
-  ELSE IF (spqn_e(ns,ne)==1) THEN
-    masksp_e(ns)= .FALSE.
-  ELSE
-    STOP "spin QN /= 0 or 1 in sp file"
-  END IF
-END DO
+IF (COMPUTE_eSPINDN) THEN
+  CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
+  DO ns= 1, numspstates_e
+    IF (spqn_e(ns,ne)==0) THEN
+      masksp_e(ns)= .TRUE.
+      CALL LOGGA(2, "  ", ns)
+    ELSE IF (spqn_e(ns,ne)==1) THEN
+      masksp_e(ns)= .FALSE.
+    ELSE
+      STOP "spin QN /= 0 or 1 in sp file"
+    END IF
+  END DO
 
-CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
-CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
-     &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-     &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-CALL OUTDENS( numx_e, dens, FILEdensDNe, denssum )
-CALL LOGGA(2, "integrated spin Down density=", denssum)
+  CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
+  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
+       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
+       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
+  CALL OUTDENS( numx_e, dens, FILEdensDNe, denssum )
+  CALL LOGGA(2, "integrated spin Down density=", denssum)
+END IF
 
 DEALLOCATE(dens)
 

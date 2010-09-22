@@ -41,7 +41,7 @@ ALLOCATE(psihex(-numh_inoutrs:numh_inoutrs,-numh_inoutrs:numh_inoutrs,numpsi_rea
 READ(33) psihex
 CLOSE(33)
 
-constnorm= SQRT( SQRT(3./4.)*dh_inoutrs*dh_inoturs )
+constnorm= SQRT( SQRT(3./4.)*dh_inoutrs*dh_inoutrs )
 numx= 3*(numh_inoutrs+1)*numh_inoutrs + 1
 ALLOCATE(psi(numx,numspwf))
 nx=0

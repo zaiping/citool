@@ -61,11 +61,12 @@ DEALLOCATE(psihex)
 END SUBROUTINE INSPWF
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-SUBROUTINE OUTDENS (numx, dens, filename)
+SUBROUTINE OUTDENS (numx, dens, filename, denssum)
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: numx
 REAL*8, INTENT(IN) :: dens(numx) 
 CHARACTER(*), INTENT(IN) :: filename
+REAL*8, INTENT(OUT) :: denssum
 
 INTEGER :: np, nq, nx
 
@@ -74,17 +75,20 @@ IF (numx /= 3*(numh_inoutrs+1)*numh_inoutrs + 1) STOP "OUTDENS: numx /= num node
 OPEN(15, FILE=filename, FORM="FORMATTED")
 WRITE(15,*) numh_inoutrs, dh_inoutrs, numx  ! number of nodes
 
+denssum= 0.
 nx= 0
 DO nq= -numh_inoutrs, numh_inoutrs
   DO np= -numh_inoutrs, numh_inoutrs
     IF (np <= nq+numh_inoutrs .AND. np >= nq-numh_inoutrs) THEN
       nx= nx + 1
       WRITE(15,*) np, nq, dens(nx)
+      denssum= denssum + dens(nx)
     END IF
   END DO
   WRITE(15,*)
 END DO
 IF (nx /= numx) STOP "OUTDENS: nx /= num nodes"
+denssum= denssum*SQRT(3./4.)*dh_inoutrs*dh_inoutrs
 
 CLOSE(15)
 

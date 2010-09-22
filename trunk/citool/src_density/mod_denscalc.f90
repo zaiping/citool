@@ -28,9 +28,6 @@ INTEGER, INTENT(IN) :: numspstates_O
 INTEGER*8, INTENT(IN) :: ket_O(:)   !(blockdim)
 REAL*8, INTENT(OUT) :: dens(:)      !(numx)
 
-
-
-
 INTEGER, ALLOCATABLE :: matcc(:,:)
 INTEGER*8 :: klef, krig
 REAL*8 :: sign, clcl
@@ -46,7 +43,7 @@ DO nl= 1, blockdim
     IF ( ket_O(nl) /= ket_O(nlp) )  CYCLE   
     ! here I suppose that the unused sp states bits are set to zero
 
-    PRINT*, "nl, nl' =", nl, nlp
+    !PRINT*, "nl, nl' =", nl, nlp
 
     clcl= mpstate(nl)*mpstate(nlp)
 

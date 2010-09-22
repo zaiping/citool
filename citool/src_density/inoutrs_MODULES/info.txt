@@ -1,6 +1,11 @@
 This directory contains different modules for the reading of real-space wave functions and writing down of density.
+No filename (i.e. "") for a specific density means that it will not be calculated.
+The module also contains the indication of the mp state you are interested in:
+WANTBLOCK, WANTRANK   (0, 0 means the ground state).
 
-The specific module need should be moved in ../ and renamed mod_inoutrs.f90.
+
+The specific module needed should be moved in ../ and renamed mod_inoutrs.f90.
+==================================================
 
 Now available:
 

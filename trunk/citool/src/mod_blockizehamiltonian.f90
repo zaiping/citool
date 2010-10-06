@@ -51,7 +51,7 @@ blockstart(1)= 1
 colfixed= 1
 
 DO row= 1, dimhspace
-  IF (MOD(row,1000) == 0)  THEN
+  IF (MOD(row,5000) == 0)  THEN
     CALL LOGGA(2, "    % completed : ", REAL(row*100)/dimhspace)
   END IF
   numprev0= 0

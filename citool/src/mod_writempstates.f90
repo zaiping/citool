@@ -30,35 +30,44 @@ INTEGER*8 :: kete, keth
 INTEGER :: nmp, nsd
 
 
-OPEN(21, FILE=TRIM(fileoutASC_mpstates),                    &
+IF (fileoutASC_mpstates /= "") THEN
+  OPEN(21, FILE=TRIM(fileoutASC_mpstates),                    &
      &   ACTION="WRITE", STATUS="OLD", POSITION="APPEND", FORM="FORMATTED")
+  WRITE(21,"(A6,I4,A9,I8)") "BLOCK ", nblock, " ,  dim: ", dimblock
 
-WRITE(21,"(A6,I4,A9,I8)") "BLOCK ", nblock, " ,  dim: ", dimblock
+  DO nmp= 1, blocknummpenergies
+    WRITE(21,"(I3,3X)",ADVANCE="NO") nmp
+    WRITE(21,*) mpenergies(nmp)
+    IF (nmp <= blocknummpstates) THEN
+      DO nsd= 1, dimblock
+        weight= ABS(mpstates(nsd,nmp))**2
+        IF (weight < cutoff_fileoutASC_mpstates) CYCLE
+        kete= ket( nsd, 1 )
+        keth= ket( nsd, 2 )
+        WRITE(21,"('(',E9.3,',',E9.3,')',3X)",ADVANCE="NO") mpstates(nsd,nmp)
+        WRITE(21,"(A,1X)",ADVANCE="NO") "e"
+        WRITE(21,binfmt_e) kete
+        WRITE(21,"('_______',F7.3,'_%','_______ ')",ADVANCE="NO") weight*100
+        WRITE(21,"(A,1X)",ADVANCE="NO") "h"
+        WRITE(21,binfmt_h) keth
+      END DO
+    END IF
+    WRITE(21,*) 
+  END DO
 
-DO nmp= 1, blocknummpenergies
-  WRITE(21,"(I3,3X)",ADVANCE="NO") nmp
-  WRITE(21,*) mpenergies(nmp)
+  CLOSE(21)
+END IF
 
-  IF (nmp <= blocknummpstates) THEN
-    DO nsd= 1, dimblock
-      weight= ABS(mpstates(nsd,nmp))**2
-      IF (weight<1e-6) CYCLE
-      kete= ket( nsd, 1 )
-      keth= ket( nsd, 2 )
-
-      WRITE(21,"('(',E9.3,',',E9.3,')',3X)",ADVANCE="NO") mpstates(nsd,nmp)
-      WRITE(21,"(A,1X)",ADVANCE="NO") "e"
-      WRITE(21,binfmt_e) kete
-      WRITE(21,"('_______',F7.3,'_%','_______ ')",ADVANCE="NO") weight*100
-      WRITE(21,"(A,1X)",ADVANCE="NO") "h"
-      WRITE(21,binfmt_h) keth
-
-    END DO
-  END IF
-  WRITE(21,*) 
-END DO
-
-CLOSE( 21 )
+IF (fileoutBIN_mpstates /= "") THEN
+  OPEN(22, FILE=TRIM(fileoutBIN_mpstates),                    &
+     &   ACTION="WRITE", STATUS="OLD", POSITION="APPEND", FORM="UNFORMATTED")
+  WRITE(22) nblock, dimblock
+  WRITE(22) blocknummpenergies
+  WRITE(22) mpenergies
+  WRITE(22) blocknummpstates
+  WRITE(22) mpstates
+  CLOSE(22)
+END IF
 
 END SUBROUTINE WRITEMPSTATES_X
 
@@ -89,35 +98,44 @@ INTEGER*8 :: kete, keth
 INTEGER :: nmp, nsd
 
 
-OPEN(21, FILE=TRIM(fileoutASC_mpstates),                    &
+IF (fileoutASC_mpstates /= "") THEN
+  OPEN(21, FILE=TRIM(fileoutASC_mpstates),                    &
      &   ACTION="WRITE", STATUS="OLD", POSITION="APPEND", FORM="FORMATTED")
+  WRITE(21,"(A6,I4,A9,I8)") "BLOCK ", nblock, " ,  dim: ", dimblock
 
-WRITE(21,"(A6,I4,A9,I8)") "BLOCK ", nblock, " ,  dim: ", dimblock
+  DO nmp= 1, blocknummpenergies
+    WRITE(21,"(I3,3X)",ADVANCE="NO") nmp
+    WRITE(21,*) mpenergies(nmp)
+    IF (nmp <= blocknummpstates) THEN
+      DO nsd= 1, dimblock
+        weight= ABS(mpstates(nsd,nmp))**2
+        IF (weight < cutoff_fileoutASC_mpstates) CYCLE
+        kete= ket( nsd, 1 )
+        keth= ket( nsd, 2 )
+        WRITE(21,"(E9.3,15X)",ADVANCE="NO") mpstates(nsd,nmp)
+        WRITE(21,"(A,1X)",ADVANCE="NO") "e"
+        WRITE(21,binfmt_e) kete
+        WRITE(21,"('_______',F7.3,'_%','_______ ')",ADVANCE="NO") weight*100
+        WRITE(21,"(A,1X)",ADVANCE="NO") "h"
+        WRITE(21,binfmt_h) keth
+      END DO
+    END IF
+    WRITE(21,*) 
+  END DO
+  
+  CLOSE(21)
+END IF
 
-DO nmp= 1, blocknummpenergies
-  WRITE(21,"(I3,3X)",ADVANCE="NO") nmp
-  WRITE(21,*) mpenergies(nmp)
-
-  IF (nmp <= blocknummpstates) THEN
-    DO nsd= 1, dimblock
-      weight= ABS(mpstates(nsd,nmp))**2
-      IF (weight<1e-6) CYCLE
-      kete= ket( nsd, 1 )
-      keth= ket( nsd, 2 )
-
-      WRITE(21,"(E9.3,15X)",ADVANCE="NO") mpstates(nsd,nmp)
-      WRITE(21,"(A,1X)",ADVANCE="NO") "e"
-      WRITE(21,binfmt_e) kete
-      WRITE(21,"('_______',F7.3,'_%','_______ ')",ADVANCE="NO") weight*100
-      WRITE(21,"(A,1X)",ADVANCE="NO") "h"
-      WRITE(21,binfmt_h) keth
-
-    END DO
-  END IF
-  WRITE(21,*) 
-END DO
-
-CLOSE( 21 )
+IF (fileoutBIN_mpstates /= "") THEN
+  OPEN(22, FILE=TRIM(fileoutBIN_mpstates),                    &
+     &   ACTION="WRITE", STATUS="OLD", POSITION="APPEND", FORM="UNFORMATTED")
+  WRITE(22) nblock, dimblock
+  WRITE(22) blocknummpenergies
+  WRITE(22) mpenergies
+  WRITE(22) blocknummpstates
+  WRITE(22) mpstates
+  CLOSE(22)
+END IF
 
 END SUBROUTINE WRITEMPSTATES
 

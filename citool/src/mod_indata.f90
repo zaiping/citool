@@ -7,33 +7,36 @@ MODULE mod_indata
 
 ! indata_singleparticle
   INTEGER :: numspstates_e
-  INTEGER :: numspqn_e
   INTEGER :: numspstates_h
-  INTEGER :: numspqn_h
 ! derived
   CHARACTER(120) :: binfmt_e, binfmt_h, binfmt_eh
 
 ! indata_multiparticle
-  INTEGER :: num_e
-  INTEGER :: num_h
-  INTEGER :: nummpenergies
-  INTEGER :: nummpstates
-  LOGICAL :: complexrun
+  INTEGER :: num_e= 0
+  INTEGER :: num_h= 0
+  INTEGER :: nummpenergies= 6
+  INTEGER :: nummpstates= 6
+  LOGICAL :: complexrun= .FALSE.
 
 ! indata_inoutput
-  CHARACTER(80) :: filein_spstates_e 
-  CHARACTER(80) :: filein_spstates_h
-  CHARACTER(30) :: fileinformat_coulomb  ! Coulomb file (dat|cit real|complex)
-  CHARACTER(80) :: filein_coulomb_ee 
-  CHARACTER(80) :: filein_coulomb_hh
-  CHARACTER(80) :: filein_coulomb_eh
-  CHARACTER(80) :: fileoutBIN_hspace
-  CHARACTER(80) :: fileoutASC_hspace
-  CHARACTER(80) :: fileoutBIN_mpstates
-  CHARACTER(80) :: fileoutASC_mpstates
-  INTEGER :: loglevel             ! with 0 everything is logged
-  CHARACTER(80) :: statusfile     ! name of status file
-  CHARACTER(80) :: runname
+  CHARACTER(80) :: citoolnml_version = ""
+  CHARACTER(80) :: filein_spstates_e = ""
+  CHARACTER(80) :: filein_spstates_h = ""
+  CHARACTER(30) :: fileinformat_coulomb = ""   ! Coulomb file (dat|cit real|complex)
+  CHARACTER(80) :: filein_coulomb_ee = "" 
+  CHARACTER(80) :: filein_coulomb_hh = ""
+  CHARACTER(80) :: filein_coulomb_eh = ""
+  CHARACTER(80) :: filein_blockconstrains_e = ""
+  CHARACTER(80) :: filein_blockconstrains_h = ""
+  CHARACTER(80) :: fileoutBIN_hspace = "hspace.bin"
+  CHARACTER(80) :: fileoutASC_hspace = "hspace.txt"
+  CHARACTER(80) :: fileoutBIN_mpstates = "mpstates.bin"
+  REAL*8 :: cutoff_fileoutBIN_mpstates = 0.
+  CHARACTER(80) :: fileoutASC_mpstates = "mpstates.txt"
+  REAL*8 :: cutoff_fileoutASC_mpstates = 0.
+  INTEGER :: loglevel = 0                      ! with 0 everything is logged
+  CHARACTER(80) :: statusfile = "citool.log"   ! name of status file
+  CHARACTER(80) :: runname = "citoolrun"
 
 ! indata_parallel  (reserved for future parallelization)
   INTEGER :: npeio_mpi= 0   ! proces for i/o
@@ -41,9 +44,7 @@ MODULE mod_indata
 
   NAMELIST /indata_singleparticle/             &
        &  numspstates_e,                       &
-       &  numspqn_e,                           &
-       &  numspstates_h,                       &
-       &  numspqn_h
+       &  numspstates_h
 
   NAMELIST /indata_multiparticle/              &
        &  num_e,                               &
@@ -53,16 +54,21 @@ MODULE mod_indata
        &  complexrun
 
   NAMELIST /indata_inoutput/                   &
+       &  citoolnml_version,                   &
        &  filein_spstates_e,                   &
        &  filein_spstates_h,                   &
        &  fileinformat_coulomb,                &
        &  filein_coulomb_ee,                   &
        &  filein_coulomb_hh,                   &
        &  filein_coulomb_eh,                   &
+       &  filein_blockconstrains_e,            &
+       &  filein_blockconstrains_h,            &
        &  fileoutBIN_hspace,                   &
        &  fileoutASC_hspace,                   &
        &  fileoutBIN_mpstates,                 &
+       &  cutoff_fileoutBIN_mpstates,          &
        &  fileoutASC_mpstates,                 &
+       &  cutoff_fileoutASC_mpstates,          &
        &  loglevel,                            &
        &  statusfile,                          &
        &  runname
@@ -101,14 +107,6 @@ SUBROUTINE INDATA_GET(nmlfile)
        &  STOP "INDATA_GET: nummpenergies < 1"
   IF ( nummpstates < 0 .OR. nummpstates > nummpenergies )  &
        &  STOP "INDATA_GET: nummpstates < 0 or > nummpenergies"
-  IF ( num_e == 0 ) THEN
-    numspstates_e= 1
-    numspqn_e= 1
-  END IF
-  IF ( num_h == 0 ) THEN
-    numspstates_h= 1
-    numspqn_h= 1
-  END IF
 
   fileinformat_coulomb= REPEAT(" ",30) 
   READ(33,NML=indata_inoutput)
@@ -119,26 +117,27 @@ SUBROUTINE INDATA_GET(nmlfile)
        & INDEX(fileinformat_coulomb,"complex16")==0        )  &
        & STOP "INDATA_GET:  Unknown or redundant fileinformat_coulomb 2 !"
 
+  IF ( cutoff_fileoutBIN_mpstates > 0. ) STOP "INDATA_GET: BIN cutoff > 0 not implemented"
+  IF ( cutoff_fileoutASC_mpstates > 1. ) STOP "INDATA_GET: cutoff > 1"
+
   CLOSE(33)
 
 END SUBROUTINE INDATA_GET
 
 !===================================================================
-SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn,    &
-     &  namespqn, spqn, spenergy )
+SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn, namespqn, spqn, spenergy )
   IMPLICIT NONE
 ! reads the single-particle states and energies
   CHARACTER(*), INTENT(IN) :: partype
   INTEGER, INTENT(IN) :: numspstates
-  INTEGER, INTENT(IN) :: numspqn
-  CHARACTER(LEN=12), INTENT(OUT) :: namespqn(numspqn)
-  INTEGER, INTENT(OUT) :: spqn(numspstates,numspqn)
-  REAL*8, INTENT(OUT) :: spenergy(numspstates)
+  INTEGER, INTENT(OUT) :: numspqn
+  CHARACTER(LEN=12), ALLOCATABLE, INTENT(OUT) :: namespqn(:)
+  INTEGER, ALLOCATABLE, INTENT(OUT) :: spqn(:,:)
+  REAL*8, ALLOCATABLE, INTENT(OUT) :: spenergy(:)
 
   CHARACTER(80) :: filein_spstates
   CHARACTER(1) :: partype_arg, partype_read
   INTEGER :: numspstates_read
-  INTEGER :: numspqn_read
   INTEGER :: ns_read
   INTEGER :: ns, nqn
 
@@ -165,17 +164,20 @@ SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn,    &
     STOP "INDATA_SPSTATES: partype_read does not match"
   END IF
 
-  READ(31,*) numspstates_read, numspqn_read
+  READ(31,*) numspstates_read, numspqn
 
   IF ( numspstates_read < numspstates ) THEN
     STOP "INDATA_SPSTATES: not enough sp states in the file"
   ELSE IF ( numspstates_read /= numspstates ) THEN
     PRINT*, "WARNING: numspstates < sp states available in the file"
   END IF
-
-  IF ( numspqn_read /= numspqn ) THEN
-    STOP "INDATA_SPSTATES: numspqn_read does not match"
+  IF ( numspqn < 1 ) THEN
+    STOP "INDATA_SPSTATES: insert at least 1 sp quantum number"
   END IF
+
+  ALLOCATE(namespqn(numspqn))
+  ALLOCATE(spqn(numspstates,numspqn))
+  ALLOCATE(spenergy(numspstates))
 
   READ(31,"(XXXX)",ADVANCE="NO")
   DO nqn= 1, numspqn
@@ -183,19 +185,105 @@ SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn,    &
   END DO
   READ(31,*)
 
-  spenergy(:)= 0d0
+  spenergy(:)= -9999.9999d99
   DO ns= 1, numspstates
     READ(31,"(I3,X)",ADVANCE="NO") ns_read
-    IF ( spenergy(ns_read) /= 0d0 ) THEN
-      STOP "INDATA_SPSTATES: double-defined sp state"
+    IF ( ns_read < 1 .OR. ns_read > numspstates ) THEN
+      STOP "INDATA_SPSTATES: sp state # < 1 or > numspstates"
+    END IF
+    IF ( spenergy(ns_read) /= -9999.9999d99 ) THEN
+      STOP "INDATA_SPSTATES: possibly double-defined sp state"
     END IF
     DO nqn= 1, numspqn
       READ(31,"(I12)",ADVANCE="NO") spqn(ns_read,nqn)
     END DO
     READ(31,*) spenergy(ns_read)
   END DO
+  
+  CLOSE(31)
 
 END SUBROUTINE INDATA_SPSTATES
+
+!===================================================================
+SUBROUTINE INDATA_BLOCKCONSTRAINS( partype, numspqn, namespqn,   &
+     &  numblockcons, blockcons )
+  IMPLICIT NONE
+! reads the block contrains file
+  CHARACTER(*), INTENT(IN) :: partype
+  INTEGER, INTENT(IN) :: numspqn
+  CHARACTER(LEN=12), INTENT(IN) :: namespqn(numspqn)
+  INTEGER, INTENT(OUT) :: numblockcons
+  INTEGER, ALLOCATABLE, INTENT(OUT) :: blockcons(:,:)
+
+  CHARACTER(80) :: filein_blockconstrains
+  CHARACTER(1) :: partype_arg, partype_read
+  INTEGER :: numspqn_read
+  CHARACTER(LEN=12) :: namespqn_read, cons_read
+
+  INTEGER :: nc_read, nc, nqn
+
+  IF ( partype=="e" .OR. partype=="E" ) THEN
+    partype_arg= "e"
+    filein_blockconstrains= filein_blockconstrains_e
+  ELSE IF ( partype=="h" .OR. partype=="H" ) THEN
+    partype_arg= "h"
+    filein_blockconstrains= filein_blockconstrains_h
+  ELSE
+    STOP "INDATA_BLOCKCONSTRAINS: unknown partype"
+  END IF
+
+  OPEN(31, FILE=TRIM(filein_blockconstrains),             &
+       &   ACTION="READ", STATUS="OLD", FORM="FORMATTED")
+
+  READ(31,*) partype_read
+
+  IF ( IACHAR(partype_read) < 97 ) THEN
+    partype_read= ACHAR(IACHAR(partype_read)+32)  ! to lower case
+  END IF
+
+  IF ( partype_read /= partype_arg ) THEN
+    STOP "INDATA_BLOCKCONSTRAINS: partype_read does not match"
+  END IF
+
+  READ(31,*) numblockcons, numspqn_read
+
+  IF ( numblockcons < 1 ) THEN
+    STOP "INDATA_BLOCKCONSTRAINS: numblockcons < 1"
+  END IF
+  IF ( numspqn_read /= numspqn ) THEN
+    STOP "INDATA_BLOCKCONSTRAINS: numspqn_read does not match"
+  END IF
+
+  ALLOCATE(blockcons(numblockcons,numspqn+2))
+
+  blockcons(:,1:numspqn)= 9999
+  blockcons(:,numspqn+1)= nummpenergies
+  blockcons(:,numspqn+2)= nummpstates
+
+  READ(31,"(XXXX)",ADVANCE="NO")
+  DO nqn= 1, numspqn
+    READ(31,"(A12)",ADVANCE="NO") namespqn_read
+    IF ( namespqn_read /= namespqn(nqn) ) THEN
+      STOP "INDATA_BLOCKCONSTRAINS: namespqn mismatch"
+    END IF
+  END DO
+  READ(31,*)
+
+  DO nc= 1, numblockcons
+    READ(31,"(I3,X)",ADVANCE="NO") nc_read
+    IF ( nc_read /= nc ) THEN
+      STOP "INDATA_BLOCKCONSTRAINS: constrain wrong #"
+    END IF
+    DO nqn= 1, numspqn + 2
+      READ(31,"(A12)",ADVANCE="NO") cons_read
+      IF (TRIM(ADJUSTL(cons_read)) /= "*") THEN
+        READ(cons_read,*) blockcons(nc,nqn)
+      END IF        
+    END DO
+    READ(31,*)
+  END DO
+
+END SUBROUTINE INDATA_BLOCKCONSTRAINS
 
 !===================================================================
 SUBROUTINE INDATA_COULOMB_X( citype, numci, ci_x )

@@ -55,11 +55,12 @@ OBJS =  main.o                     \
         mod_specialf.o             \
         mod_cimakeindex.o          \
         mod_createhspace.o         \
-	mod_blockizehamiltonian.o  \
+        mod_composehspace.o        \
+        mod_blockizehamiltonian.o  \
         mod_createhamiltonian.o    \
-	mod_diagonalize.o          \
-	mod_indexx.o               \
-	mod_writempstates.o
+        mod_diagonalize.o          \
+        mod_indexx.o               \
+        mod_writempstates.o
 
 #################################################################
 #      rules 
@@ -87,12 +88,13 @@ citest: generatecitest.o mod_staticdata.o mod_indata.o
 #      dependencies
 #################################################################
 
-main.o :                mod_indata.o                  \
+main.o:		mod_indata.o                  \
 			mod_logga.o                   \
 			mod_myaux.o                   \
 			mod_specialf.o                \
 			mod_cimakeindex.o             \
 			mod_createhspace.o            \
+			mod_composehspace.o           \
 			mod_blockizehamiltonian.o     \
 			mod_createhamiltonian.o       \
 			mod_diagonalize.o             \
@@ -100,8 +102,8 @@ main.o :                mod_indata.o                  \
 
 mod_staticdata.o: 
 
-mod_indata.o:		mod_staticdata.o              \
-			mod_myaux.o
+mod_indata.o:	mod_staticdata.o              \
+				mod_myaux.o
 
 mod_logga.o:		mod_indata.o
 
@@ -113,8 +115,10 @@ mod_cimakeindex.o:	mod_indata.o
 
 mod_createhspace.o:	mod_specialf.o
 
+mod_composehspace.o:
+
 mod_blockizehamiltonian.o:	mod_indata.o         \
-				mod_logga.o
+							mod_logga.o
 
 mod_createhamiltonian.o:	mod_indata.o
 

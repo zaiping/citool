@@ -5,9 +5,9 @@ TARGETCITEST = ../bin/generatecitest.x
 # keys:  <default>, citest
 #  
 # for:  CItool
-# created:  7 sep 2010 (in Castello)
-# machine:  gel.act.uji.es (linux cluster)
-# compiler:  ifort 11.1(059)
+# created:  6 oct 2010 
+# machine:  leela.fisica.unimo.it (linux fedora 8)
+# compiler:  ifort 11.0(074)
 # libraries:  ARPACK (linked with mkl blas/lapack)
 #                                            by Andrea Bertoni
 #################################################################
@@ -24,8 +24,8 @@ CC =
 ## flags to use for fortran 90, fortran 77, C compilation
 # NOTE: with -f77rtl the first column in a namelist is skipped
 #       i.e. the & must be in the second one
-F90FLAGS = -w -C #-O0  # -static -f77rtl -convert big_endian
-F77FLAGS = -w -C #-O0  # -static -f77rtl -convert big_endian
+F90FLAGS = -w -CB -C #-O0  # -static -f77rtl -convert big_endian
+F77FLAGS = -w -CB -C #-O0  # -static -f77rtl -convert big_endian
 CFLAGS =
 
 ## name of the program to link the program units
@@ -35,13 +35,16 @@ LNK = $(F90)
 LFLAGS = $(F90LAGS)
 
 ## LLIBS are libraries to use at link time
-LLIBS =  #  ./lib/libfftw3.0.1.a  # MAH..... fatta col pgi
-LLIBS = -L /home/commenda/lib -larpack_gel-MKL              \
-        -I /opt/intel/Compiler/11.1/059/mkl/include  \
-        -L /opt/intel/Compiler/11.1/059/mkl/lib/32   \
-        -lmkl_intel -lmkl_intel_thread  \
+#LLIBS = -L /home/commenda/lib -larpack_gel-MKL              \
+#        -I /opt/intel/Compiler/11.1/059/mkl/include  \
+#        -L /opt/intel/Compiler/11.1/059/mkl/lib/32   \
+#        -lmkl_intel -lmkl_intel_thread  \
+#        -lmkl_core -liomp5 -lpthread -lm
+LLIBS = -L ./lib -larpack_leela_fc8-ifort64v110_mkl              \
+        -I /opt/intel/Compiler/11.0/074/mkl/include  \
+        -L /opt/intel/Compiler/11.0/074/mkl/lib/em64t  \
+        -lmkl_intel_lp64 -lmkl_intel_thread  \
         -lmkl_core -liomp5 -lpthread -lm
-#LLIBS = -static -L /home/commenda/lib -larpack_gel-MKL
 
 #################################################################
 #      objects files

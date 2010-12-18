@@ -20,42 +20,66 @@ PROGRAM MAIN
 !*  11 jun 2010 - 14 jun 2010     ifort 11 compiler      by Andrea Bertoni
 !*************************************************************************
 
-INTEGER :: numblock, dimhspace
-INTEGER, ALLOCATABLE :: blockstart(:)
-INTEGER*8, ALLOCATABLE :: ket(:,:)       ! Slater dets for both e and h
-REAL*8, ALLOCATABLE :: mpenergies(:,:)
-REAL*8, ALLOCATABLE :: mpstates(:,:)
+CHARACTER(80), PARAMETER :: citool_version= "0.9"
+INTEGER :: dimhspace_e, dimhspace_h
 
+! constrains on H (allocated in indata_blockconstrains)
+INTEGER :: numhcons_e, numhcons_h
+INTEGER :: numhcons_e_read, numhcons_h_read
+INTEGER, ALLOCATABLE :: hcons_e(:,:)
+INTEGER, ALLOCATABLE :: hcons_h(:,:)
+INTEGER :: dimhspacecons
+INTEGER :: dimhspacecons_read
+INTEGER :: nummpenergiescons, nummpstatescons
+INTEGER :: nummpenergiescons_read, nummpstatescons_read
+INTEGER :: numblock
+INTEGER :: numblock_read
+REAL*8 :: cutoff_fileoutBIN_mpstates_read
+INTEGER, ALLOCATABLE :: blockstart(:)
+INTEGER, ALLOCATABLE :: blockstart_read(:)
+INTEGER, ALLOCATABLE :: blocknummpenergies(:)
+INTEGER, ALLOCATABLE :: blocknummpenergies_read(:)
+INTEGER, ALLOCATABLE :: blocknummpstates(:)
+INTEGER, ALLOCATABLE :: blocknummpstates_read(:)
+INTEGER*8, ALLOCATABLE :: ket(:,:)        ! Slater dets for both e and h
+INTEGER*8, ALLOCATABLE :: ket_read(:,:)
+REAL*8, ALLOCATABLE :: mpenergies(:,:)
+REAL*8, ALLOCATABLE :: mpenergies_read(:,:)
+REAL*8, ALLOCATABLE :: mpstates(:,:)
+REAL*8, ALLOCATABLE :: mpstates_read(:,:)
+
+LOGICAL, ALLOCATABLE :: masksp_e(:)
+LOGICAL, ALLOCATABLE :: masksp_h(:)
+INTEGER :: numspqn_e, numspqn_h
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_e(:)
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_h(:)
 INTEGER, ALLOCATABLE :: spqn_e(:,:)
 INTEGER, ALLOCATABLE :: spqn_h(:,:)
 REAL*8, ALLOCATABLE :: spenergy_e(:)
 REAL*8, ALLOCATABLE :: spenergy_h(:)
-LOGICAL, ALLOCATABLE :: masksp_e(:)
-LOGICAL, ALLOCATABLE :: masksp_h(:)
 INTEGER :: numx_e, numx_h
 REAL*8, ALLOCATABLE ::  psi_e(:,:)       ! sp wave functions for ELECs
 REAL*8, ALLOCATABLE ::  psi_h(:,:)       ! sp wave functions for HOLEs
 
-INTEGER :: blocknummpenergies, nmpene
+!! INTEGER :: blocknummpenergies, nmpene
 REAL*8, ALLOCATABLE :: ene_mpene(:)
 INTEGER, ALLOCATABLE :: nblock_mpene(:)
 INTEGER, ALLOCATABLE :: nrank_mpene(:)
 INTEGER, ALLOCATABLE :: indx_mpene(:)
 
 ! aux vars
-CHARACTER(80), PARAMETER :: citool_version= "0.9"
 REAL*8, ALLOCATABLE :: dens(:)
 INTEGER :: wantblockdim, wantblockfr, wantblockto
 CHARACTER(80) :: string80
 REAL*8 :: normsum, denssum
-INTEGER :: ns, nx, nb, ne
+LOGICAL :: found= .FALSE.
+INTEGER :: ncons_e, ncons_h, ncons_e_read, ncons_h_read
+INTEGER :: ns, nx, nb, nmpene, ne
 
 !.........................................init vars definitions and readout
 CALL INDATA_GET("citool.nml")
 CALL LOGGA(3, "                 ")
-CALL LOGGA(3, "  ===  START density4CItool v. "//TRIM(citool_version)//"  ====")
+CALL LOGGA(3, "  ===  START density4CItool for v. "//TRIM(citool_version)//"  ====")
 IF (TRIM(citoolnml_version) /= TRIM(citool_version)) THEN
   CALL LOGGA(3, "WARNING: input namelist version is "//TRIM(citoolnml_version))
 END IF
@@ -72,6 +96,16 @@ IF (num_e>0) THEN
   CALL LOGGA(2, "reading single-particle wave functions for ELECs")
   ! psi_e is allocated inside the routine
   CALL INSPWF(numspstates_e, numx_e, psi_e, FILEwavefunction_e)
+ELSE
+  numspstates_e= 1
+  numspqn_e= 1
+  ALLOCATE(namespqn_e(numspqn_e))
+  namespqn_e(1)= "fictiousEqn"
+  ALLOCATE(spqn_e(numspstates_e,numspqn_e))
+  spqn_e(1,1)= 0
+  ALLOCATE(spenergy_e(numspstates_e))
+  spenergy_e(1)= 0.
+  CALL LOGGA(2, "fictious single part ELEC states considered:", numspstates_e)
 END IF
 
 CALL LOGGA(2, "number of HOLES: ", num_h)
@@ -82,6 +116,16 @@ IF (num_h>0) THEN
   CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
   ! psi_h is allocated inside the routine
   CALL INSPWF(numspstates_h, numx_h, psi_h, FILEwavefunction_h)
+ELSE
+  numspstates_h= 1
+  numspqn_h= 1
+  ALLOCATE(namespqn_h(numspqn_h))
+  namespqn_h(1)= "fictiousHqn"
+  ALLOCATE(spqn_h(numspstates_h,numspqn_h))
+  spqn_h(1,1)= 0
+  ALLOCATE(spenergy_h(numspstates_h))
+  spenergy_h(1)= 0.
+  CALL LOGGA(2, "fictious single part HOLE states considered:", numspstates_h)
 END IF
 
 !......................................checks normalization of sp states
@@ -107,32 +151,33 @@ IF (num_h>0) THEN
   END DO
 END IF
 
-!..........................................reads possible constrains on blocks
-IF (filein_blockconstrains_e /= "" .AND. num_e>0) THEN
-  CALL INDATA_BLOCKCONSTRAINS("e", numspqn_e, namespqn_e,   &
-       &  numblockcons_e, blockcons_e)
-  CALL LOGGA(2, "num of constraints on blocks for ELECS", numblockcons_e)
+!..........................................reads possible constrains on H
+IF (filein_hconstrains_e /= "" .AND. num_e>0) THEN
+  CALL INDATA_HCONSTRAINS("e", numspqn_e, namespqn_e,   &
+       &  numhcons_e, hcons_e)
+  CALL LOGGA(2, "num of constraints on H for ELECS", numhcons_e)
 ELSE
-  numblockcons_e= 1
-  ALLOCATE(blockcons_e(numblockcons_e,numspqn_e+2))
-  blockcons_e(:,1:numspqn_e)= 9999
-  blockcons_e(:,numspqn_e+1)= nummpenergies
-  blockcons_e(:,numspqn_e+2)= nummpstates
+  numhcons_e= 1
+  ALLOCATE(hcons_e(numhcons_e,numspqn_e+2))
+  hcons_e(:,1:numspqn_e)= 9999
+  hcons_e(:,numspqn_e+1)= nummpenergies
+  hcons_e(:,numspqn_e+2)= nummpstates
   CALL LOGGA(2, "no constrain on blocks for ELECS")
 END IF
 
-IF (filein_blockconstrains_h /= "" .AND. num_h>0) THEN
-  CALL INDATA_BLOCKCONSTRAINS("h", numspqn_h, namespqn_h,   &
-       &  numblockcons_h, blockcons_h)
-  CALL LOGGA(2, "num of constraints on blocks for HOLES:", numblockcons_h)
+IF (filein_hconstrains_h /= "" .AND. num_h>0) THEN
+  CALL INDATA_HCONSTRAINS("h", numspqn_h, namespqn_h,   &
+       &  numhcons_h, hcons_h)
+  CALL LOGGA(2, "num of constraints on H for HOLES:", numhcons_h)
 ELSE
-  numblockcons_h= 1
-  ALLOCATE(blockcons_h(numblockcons_h,numspqn_h+2))
-  blockcons_h(:,1:numspqn_h)= 9999
-  blockcons_h(:,numspqn_h+1)= nummpenergies
-  blockcons_h(:,numspqn_h+2)= nummpstates
+  numhcons_h= 1
+  ALLOCATE(hcons_h(numhcons_h,numspqn_h+2))
+  hcons_h(:,1:numspqn_h)= 9999
+  hcons_h(:,numspqn_h+1)= nummpenergies
+  hcons_h(:,numspqn_h+2)= nummpstates
   CALL LOGGA(2, "no constrain on blocks for HOLES")
 END IF
+
 
 !...................................reads the reordered total Hilbert space
 CALL LOGGA(3, "reading Hilbert space from "//TRIM(fileoutBIN_hspace))
@@ -141,106 +186,112 @@ READ(22) string80
 IF (TRIM(string80) /= TRIM(citool_version)) STOP "wrong citool_version in bin hspace file"
 READ(22) string80
 IF (TRIM(string80) /= TRIM(runname)) STOP "wrong runname in bin hspace file"
-READ(22) dimhspaceglobal
-IF (dimhspaceglobal /= BINOMIALCO(numspstates_e,num_e)*BINOMIALCO(numspstates_h,num_h)) &
-     &   STOP "main: wrong dimhspace"
-CALL LOGGA(2, "global Hilbert space dimension:", dimhspaceglobal)
-READ(22) numblockcons_e_read, numblockcons_h_read
-IF (numblockcons_e_read /= numblockcons_e .OR. numblockcons_h_read /= numblockcons_h) &
-     &   STOP "main: wrong numblockcons in fileoutBIN_hspace"
+READ(22) dimhspace_e, dimhspace_h
+IF (dimhspace_e /= BINOMIALCO(numspstates_e,num_e)) STOP "main: wrong dimhspace_e"
+IF (dimhspace_h /= BINOMIALCO(numspstates_h,num_h)) STOP "main: wrong dimhspace_h"
+READ(22) numhcons_e_read, numhcons_h_read
+IF (numhcons_e_read /= numhcons_e .OR. numhcons_h_read /= numhcons_h) &
+     &   STOP "main: wrong numhcons in fileoutBIN_hspace"
 
 ! DOUBLE LOOP OVER CONSTRAINS
-DO ncons_e= 1, numblockcons_e
-  DO ncons_h= 1, numblockcons_h
+found= .FALSE.
+DO ncons_e= 1, numhcons_e
+  DO ncons_h= 1, numhcons_h
     READ(22) ncons_e_read, ncons_h_read
     IF (ncons_e_read/=ncons_e .OR. ncons_h_read/=ncons_h) STOP "MAIN: ncons_read/=ncons"
     READ(22) dimhspacecons_read
     READ(22) numblock_read
+    ALLOCATE( blockstart_read(dimhspacecons_read+1) )
+    ALLOCATE( ket_read(dimhspacecons_read,2) )
     READ(22) blockstart_read(1:numblock_read+1)
-    READ(22) ket_read(1:dimhspacecons_read,1)
-    READ(22) ket_read(1:dimhspacecons_read,2)
-
+    READ(22) ket_read
     IF (ncons_e==WANTCONSE .AND. ncons_h==WANTCONSH) THEN
-      dimhspace= dimhspacecons_read
+      found= .TRUE.
+      dimhspacecons= dimhspacecons_read
       numblock= numblock_read
-      ALLOCATE( blockstart(numblock+1) )
-      blockstart(1:numblock+1)= blockstart_read(1:numblock+1)
-      ALLOCATE( ket(dimhspace,2) )
-      ket(1:dimhspace,1)= ket_read(1:dimhspacecons_read,1)
-      ket(1:dimhspace,2)= ket_read(1:dimhspacecons_read,2)
+      ALLOCATE( blockstart(dimhspacecons+1) )
+      blockstart= blockstart_read
+      ALLOCATE( ket(dimhspacecons,2) )
+      ket= ket_read
     END IF
-
-    CLOSE(22)
+    DEALLOCATE( blockstart_read )
+    DEALLOCATE( ket_read )
   END DO
 END DO
+CLOSE(22)
+IF (.NOT. found) STOP "MAIN: WANTCONSE/WANTCONSH not found for H"
+CALL LOGGA(2, "Hilbert space dimension:", dimhspacecons)
 
-CALL LOGGA(2, "Hilbert space dimension:", dimhspace)
 
 !..........................................reads the multi-carrier states
 CALL LOGGA(2, "reading multi-carrier states from "//TRIM(fileoutBIN_mpstates))
-ALLOCATE( mpenergies(nummpenergies,numblock) )
-ALLOCATE( mpstates(dimhspace,nummpstates) )
-
 OPEN(22, FILE=TRIM(fileoutBIN_mpstates), ACTION="READ", FORM="UNFORMATTED")
 READ(22) string80
 IF (TRIM(string80) /= TRIM(citool_version)) STOP "wrong citool_version in bin mpstates file"
 READ(22) string80
 IF (TRIM(string80) /= TRIM(runname)) STOP "wrong runname in bin mpstates file"
-READ(22) cutoff_fileoutBIN_mpstates
-CALL LOGGA(2, "the cutoff in bin hspace file is", cutoff_fileoutBIN_mpstates)
-READ(22) numblockcons_e_read, numblockcons_h_read
-IF (numblockcons_e_read/=numblockcons_e .OR. numblockcons_h_read/=numblockcons_h)  &
-    &  STOP "MAIN: numblockcons_read/=numblockcons in mp file"
-READ(22) dimhspaceglobal_read, nummpenergies_read, nummpstates_read
-IF (dimhspaceglobal_read/=dimhspaceglobal) STOP "MAIN: error dimhspaceglobal in bin mpfile"
-IF (nummpenergies_read/=nummpenergies .OR. nummpstates_read/=nummpstates)  &
-    &  STOP "MAIN: error nummpenergies/states in mp file"
+READ(22) cutoff_fileoutBIN_mpstates_read
+IF (cutoff_fileoutBIN_mpstates_read/=cutoff_fileoutBIN_mpstates) STOP "main: cutoffBIN"
+CALL LOGGA(2, "the cutoff in bin hspace file is", cutoff_fileoutBIN_mpstates_read)
+READ(22) dimhspace_e, dimhspace_h
+IF (dimhspace_e /= BINOMIALCO(numspstates_e,num_e)) STOP "main: wrong dimhspace_e"
+IF (dimhspace_h /= BINOMIALCO(numspstates_h,num_h)) STOP "main: wrong dimhspace_h"
+READ(22) numhcons_e_read, numhcons_h_read
+IF (numhcons_e_read/=numhcons_e .OR. numhcons_h_read/=numhcons_h)  &
+    &  STOP "MAIN: numhcons_read/=numhcons in mp file"
 
 ! DOUBLE LOOP OVER CONSTRAINS
-DO ncons_e= 1, numblockcons_e
-  DO ncons_h= 1, numblockcons_h
+found= .FALSE.
+DO ncons_e= 1, numhcons_e
+  DO ncons_h= 1, numhcons_h
     READ(22) ncons_e_read, ncons_h_read
     IF (ncons_e_read/=ncons_e .OR. ncons_h_read/=ncons_h) &
       &   STOP "MAIN: ncons_read/=ncons in mp file"
     READ(22) dimhspacecons_read
     READ(22) numblock_read
     READ(22) nummpenergiescons_read, nummpstatescons_read
-    ! loop over Ham blocks
-    DO nb= 1, numblock
-      READ(22) nb_read, dimblock_read
-      READ(22) blocknummpenergies_read
-      READ(22) mpenergies_read(1:blocknummpenergies_read,nb)
-      READ(22) blocknummpstates_read
-      READ(22) mpstates_read(blockfr:blockto,1:blocknummpstates)
-    END DO
-
-    
+    ALLOCATE( mpenergies_read(nummpenergiescons_read,numblock_read) )
+    ALLOCATE( blocknummpenergies_read(dimhspacecons_read) )
+    ALLOCATE( mpstates_read(dimhspacecons_read,nummpstatescons_read) )
+    ALLOCATE( blocknummpstates_read(dimhspacecons_read) )
+    READ(22) mpenergies_read
+    READ(22) blocknummpenergies_read
+    READ(22) mpstates_read
+    READ(22) blocknummpstates_read
     IF (ncons_e==WANTCONSE .AND. ncons_h==WANTCONSH) THEN
-      IF (dimhspacecons_read/=dimhspace) STOP "MAIN: dimhspacecons in mp file"
-      IF (numblock_read/=numblock) STOP "MAIN: numblock in mp file"
+      found= .TRUE.
+      IF (dimhspacecons/=dimhspacecons_read) STOP "MAIN: dimhspacecons in mp file"
+      IF (numblock/=numblock_read) STOP "MAIN: numblock in mp file"
       nummpenergiescons= nummpenergiescons_read
       nummpstatescons= nummpstatescons_read
+      ALLOCATE( mpenergies(nummpenergiescons,numblock) )
+      mpenergies= mpenergies_read
+      ALLOCATE( blocknummpenergies(dimhspacecons) )
+      blocknummpenergies= blocknummpenergies_read
+      ALLOCATE( mpstates(dimhspacecons,nummpstatescons) )
+      mpstates= mpstates_read
+      ALLOCATE( blocknummpstates(dimhspacecons) )
+      blocknummpstates= blocknummpstates_read
     END IF
-    
-    
+    DEALLOCATE( mpenergies_read )
+    DEALLOCATE( blocknummpenergies_read )
+    DEALLOCATE( mpstates_read )
+    DEALLOCATE( blocknummpstates_read )
+  END DO
+END DO
+IF (.NOT. found) STOP "MAIN: WANTCONSE/WANTCONSH not found for mp"
 
 
 !..........................finds the mp states order with increasing energy
 CALL LOGGA(2, "finding the mp states order with increasing energy")
-ALLOCATE(ene_mpene(numblock*nummpenergies))
-ALLOCATE(nblock_mpene(numblock*nummpenergies))
-ALLOCATE(nrank_mpene(numblock*nummpenergies))
-ALLOCATE(indx_mpene(numblock*nummpenergies))
+ALLOCATE(ene_mpene(numblock*nummpenergiescons))
+ALLOCATE(nblock_mpene(numblock*nummpenergiescons))
+ALLOCATE(nrank_mpene(numblock*nummpenergiescons))
+ALLOCATE(indx_mpene(numblock*nummpenergiescons))
 
 nmpene= 0
 DO nb= 1, numblock
-!  blockdim= blockstart(nb+1)-blockstart(nb)
-!  blockfr= blockstart(nb)
-!  blockto= blockstart(nb+1)-1
-  blocknummpenergies= MIN(nummpenergies, blockstart(nb+1)-blockstart(nb))
-!  blocknummpstates= MIN(nummpstates,blockdim)
-
-  DO ne= 1, blocknummpenergies
+  DO ne= 1, blocknummpenergies(nb)
     nmpene= nmpene+1
     ene_mpene(nmpene)= mpenergies(ne,nb)
     nblock_mpene(nmpene)= nb
@@ -259,7 +310,6 @@ DO ne= 1, nmpene
 END DO
 
 !..........................................decides which mp state to consider
-
 IF ( WANTBLOCK == 0 ) THEN
   WANTBLOCK= nblock_mpene(indx_mpene(1))
   WANTRANK= nrank_mpene(indx_mpene(1))
@@ -267,7 +317,6 @@ END IF
 wantblockdim= blockstart(WANTBLOCK+1)-blockstart(WANTBLOCK)
 wantblockfr= blockstart(WANTBLOCK)
 wantblockto= blockstart(WANTBLOCK+1)-1
-!wantblocknummpstates= MIN(nummpstates,wantblockdim)
 
 
 !:::::::::::::::::::::::::::::::::::::::::: ELEC density calculation  :::::::
@@ -282,7 +331,7 @@ IF (FILEdensTOTe /= "") THEN
   masksp_e= .TRUE.
 
   CALL LOGGA(2, "calculating Total ELECTRON density")
-  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
+  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),             &
        &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
        &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
   CALL OUTDENS( numx_e, dens, FILEdensTOTe, denssum )

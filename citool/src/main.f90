@@ -76,7 +76,7 @@ INTEGER, ALLOCATABLE :: blocknummpstates(:)
 INTEGER, ALLOCATABLE :: blockstart(:)
 INTEGER, ALLOCATABLE :: blocknonzero(:)
 
-! Hamiltonianof a block
+! Hamiltonian of a block
 ! stored in Compressed Row Storage format (same as Pardiso)
 ! see  http://www.cs.utk.edu/~dongarra/etemplates/node371.html
 INTEGER, ALLOCATABLE :: hami(:)
@@ -347,7 +347,7 @@ nummpstatescons=   MIN(hcons_e(ncons_e,numspqn_e+2),      &
 !...................creates (and allocates) the global eh H space for a given constrain
 CALL LOGGA(2, "creating composite eh Hilbert space...")
 CALL COMPOSEHSPACE(numspstates_e, numspqn_e, spqn_e, dimhspace_e, ket_e, hcons_e(ncons_e,1:numspqn_e),  &
-      &            numspstates_e, numspqn_h, spqn_h, dimhspace_h, ket_h, hcons_h(ncons_h,1:numspqn_h),  &
+      &            numspstates_h, numspqn_h, spqn_h, dimhspace_h, ket_h, hcons_h(ncons_h,1:numspqn_h),  &
       &            ket, dimhspacecons)
 CALL LOGGA(2, "...done")
 
@@ -407,8 +407,7 @@ IF (fileoutBIN_hspace /= "") THEN
   WRITE(22) dimhspacecons
   WRITE(22) numblock
   WRITE(22) blockstart(1:numblock+1)
-  WRITE(22) ket(1:dimhspacecons,1)
-  WRITE(22) ket(1:dimhspacecons,2)
+  WRITE(22) ket
   CLOSE(22)
 END IF
 
@@ -418,11 +417,12 @@ IF (fileoutASC_mpstates /= "") THEN
   WRITE(21,*) "  * * * * * ELEC HOLE constrains:", ncons_e, ncons_h
   WRITE(21,*) " H space dimension for this constrain =", dimhspacecons
   WRITE(21,*) " NUMBER OF BLOCKS:", numblock
+  WRITE(21,*) " NUMBER OF energies and states:", nummpenergiescons, nummpstatescons
   WRITE(21,*) 
   CLOSE(21)
 END IF
 IF (fileoutBIN_mpstates /= "") THEN
-  OPEN(22, FILE=TRIM(fileoutBIN_mpstates), ACTION="WRITE", FORM="UNFORMATTED")
+  OPEN(22, FILE=TRIM(fileoutBIN_mpstates), ACTION="WRITE", FORM="UNFORMATTED", POSITION="APPEND")
   WRITE(22) ncons_e, ncons_h
   WRITE(22) dimhspacecons
   WRITE(22) numblock
@@ -544,13 +544,13 @@ DO nb= 1, numblock  !BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
   CALL LOGGA(2, "diagonalizing the block Hamiltonian...")
 
   IF ( complexrun ) THEN
-    CALL DIAGONALIZE_X( blockdim, hami, hamj, ham_x, blocknummpenergies,       &
-         &  mpenergies(1:blocknummpenergies,nb), blocknummpstates,             &
-         &  mpstates_x(blockfr:blockto,1:blocknummpstates) )
+    CALL DIAGONALIZE_X( blockdim, hami, hamj, ham_x, blocknummpenergies(nb),       &
+         &  mpenergies(1:blocknummpenergies(nb),nb), blocknummpstates(nb),             &
+         &  mpstates_x(blockfr:blockto,1:blocknummpstates(nb)) )
   ELSE
-    CALL DIAGONALIZE( blockdim, hami, hamj, ham, blocknummpenergies,         &
-         &  mpenergies(1:blocknummpenergies,nb), blocknummpstates,           &
-         &  mpstates(blockfr:blockto,1:blocknummpstates) )
+    CALL DIAGONALIZE( blockdim, hami, hamj, ham, blocknummpenergies(nb),         &
+         &  mpenergies(1:blocknummpenergies(nb),nb), blocknummpstates(nb),           &
+         &  mpstates(blockfr:blockto,1:blocknummpstates(nb)) )
   END IF
 
   CALL LOGGA(2, "...done")
@@ -560,28 +560,27 @@ END DO   !BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB end loop on the blocks
 
 !...IO.................................writes ASC and BIN mp energies and states
 CALL LOGGA(2, "writing multiparticle states...")
-
-DA SISTEMARE XXXXXXXX (SPOSTATA QUA DA DENTRO IL LOOP NB
-
 !  print*, "writing mp states of BLOCK", nb
 !  print*, "blockfr, blockto=", blockfr, blockto
 IF ( complexrun ) THEN
-  CALL WRITEMPSTATES_X( nb, blockdim, ket(blockfr:blockto,1:2),         &
-       &  namespqn_e, spqn_e, namespqn_h, spqn_h,                     &
-       &  blocknummpenergies, mpenergies(1:blocknummpenergies,nb),    &
-       &  blocknummpstates, mpstates_x(blockfr:blockto,1:blocknummpstates) )
+  CALL WRITEMPSTATES_X( numblock, dimhspacecons, blockstart, ket,        &
+       &  nummpenergiescons, mpenergies, blocknummpenergies,             &
+       &  nummpstatescons, mpstates_x, blocknummpstates )
 ELSE
-  CALL WRITEMPSTATES( nb, blockdim, ket(blockfr:blockto,1:2),         &
-       &  namespqn_e, spqn_e, namespqn_h, spqn_h,                   &
-       &  blocknummpenergies, mpenergies(1:blocknummpenergies,nb),  &
-       &  blocknummpstates, mpstates(blockfr:blockto,1:blocknummpstates) )
+  CALL WRITEMPSTATES( numblock, dimhspacecons, blockstart, ket,         &
+       &  nummpenergiescons, mpenergies, blocknummpenergies,            &
+       &  nummpstatescons, mpstates, blocknummpstates )
 END IF
   
 CALL LOGGA(2, "...done")
 
-XXXXXXXXX
-
 !......................................deallocates arrays of constrains loops
+DEALLOCATE( ket )
+DEALLOCATE( blockstart )
+DEALLOCATE( blocknonzero )
+DEALLOCATE( blocknummpenergies )
+DEALLOCATE( blocknummpstates )
+
 DEALLOCATE( hami )
 DEALLOCATE( hamj )
 DEALLOCATE( mpenergies )
@@ -624,13 +623,10 @@ DEALLOCATE( spqn_e )
 DEALLOCATE( spqn_h )
 DEALLOCATE( spenergy_e )
 DEALLOCATE( spenergy_h )
-DEALLOCATE( blockcons_e )
-DEALLOCATE( blockcons_h )
-DEALLOCATE( blockstart )
-DEALLOCATE( blocknonzero )
+DEALLOCATE( hcons_e )
+DEALLOCATE( hcons_h )
 DEALLOCATE( ket_e )
 DEALLOCATE( ket_h )
-DEALLOCATE( ket )
 
 CALL LOGGA(2, "...done")
 

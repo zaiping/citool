@@ -26,8 +26,8 @@ MODULE mod_indata
   CHARACTER(80) :: filein_coulomb_ee = "" 
   CHARACTER(80) :: filein_coulomb_hh = ""
   CHARACTER(80) :: filein_coulomb_eh = ""
-  CHARACTER(80) :: filein_blockconstrains_e = ""
-  CHARACTER(80) :: filein_blockconstrains_h = ""
+  CHARACTER(80) :: filein_hconstrains_e = ""
+  CHARACTER(80) :: filein_hconstrains_h = ""
   CHARACTER(80) :: fileoutBIN_hspace = "hspace.bin"
   CHARACTER(80) :: fileoutASC_hspace = "hspace.txt"
   CHARACTER(80) :: fileoutBIN_mpstates = "mpstates.bin"
@@ -61,8 +61,8 @@ MODULE mod_indata
        &  filein_coulomb_ee,                   &
        &  filein_coulomb_hh,                   &
        &  filein_coulomb_eh,                   &
-       &  filein_blockconstrains_e,            &
-       &  filein_blockconstrains_h,            &
+       &  filein_hconstrains_e,                &
+       &  filein_hconstrains_h,                &
        &  fileoutBIN_hspace,                   &
        &  fileoutASC_hspace,                   &
        &  fileoutBIN_mpstates,                 &
@@ -205,17 +205,17 @@ SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn, namespqn, spqn, spene
 END SUBROUTINE INDATA_SPSTATES
 
 !===================================================================
-SUBROUTINE INDATA_BLOCKCONSTRAINS( partype, numspqn, namespqn,   &
-     &  numblockcons, blockcons )
+SUBROUTINE INDATA_HCONSTRAINS( partype, numspqn, namespqn,   &
+     &  numhcons, hcons )
   IMPLICIT NONE
 ! reads the block contrains file
   CHARACTER(*), INTENT(IN) :: partype
   INTEGER, INTENT(IN) :: numspqn
   CHARACTER(LEN=12), INTENT(IN) :: namespqn(numspqn)
-  INTEGER, INTENT(OUT) :: numblockcons
-  INTEGER, ALLOCATABLE, INTENT(OUT) :: blockcons(:,:)
+  INTEGER, INTENT(OUT) :: numhcons
+  INTEGER, ALLOCATABLE, INTENT(OUT) :: hcons(:,:)
 
-  CHARACTER(80) :: filein_blockconstrains
+  CHARACTER(80) :: filein_hconstrains
   CHARACTER(1) :: partype_arg, partype_read
   INTEGER :: numspqn_read
   CHARACTER(LEN=12) :: namespqn_read, cons_read
@@ -224,15 +224,15 @@ SUBROUTINE INDATA_BLOCKCONSTRAINS( partype, numspqn, namespqn,   &
 
   IF ( partype=="e" .OR. partype=="E" ) THEN
     partype_arg= "e"
-    filein_blockconstrains= filein_blockconstrains_e
+    filein_hconstrains= filein_hconstrains_e
   ELSE IF ( partype=="h" .OR. partype=="H" ) THEN
     partype_arg= "h"
-    filein_blockconstrains= filein_blockconstrains_h
+    filein_hconstrains= filein_hconstrains_h
   ELSE
-    STOP "INDATA_BLOCKCONSTRAINS: unknown partype"
+    STOP "INDATA_HCONSTRAINS: unknown partype"
   END IF
 
-  OPEN(31, FILE=TRIM(filein_blockconstrains),             &
+  OPEN(31, FILE=TRIM(filein_hconstrains),             &
        &   ACTION="READ", STATUS="OLD", FORM="FORMATTED")
 
   READ(31,*) partype_read
@@ -242,48 +242,48 @@ SUBROUTINE INDATA_BLOCKCONSTRAINS( partype, numspqn, namespqn,   &
   END IF
 
   IF ( partype_read /= partype_arg ) THEN
-    STOP "INDATA_BLOCKCONSTRAINS: partype_read does not match"
+    STOP "INDATA_HCONSTRAINS: partype_read does not match"
   END IF
 
-  READ(31,*) numblockcons, numspqn_read
+  READ(31,*) numhcons, numspqn_read
 
-  IF ( numblockcons < 1 ) THEN
-    STOP "INDATA_BLOCKCONSTRAINS: numblockcons < 1"
+  IF ( numhcons < 1 ) THEN
+    STOP "INDATA_HCONSTRAINS: numhcons < 1"
   END IF
   IF ( numspqn_read /= numspqn ) THEN
-    STOP "INDATA_BLOCKCONSTRAINS: numspqn_read does not match"
+    STOP "INDATA_HCONSTRAINS: numspqn_read does not match"
   END IF
 
-  ALLOCATE(blockcons(numblockcons,numspqn+2))
+  ALLOCATE(hcons(numhcons,numspqn+2))
 
-  blockcons(:,1:numspqn)= 9999
-  blockcons(:,numspqn+1)= nummpenergies
-  blockcons(:,numspqn+2)= nummpstates
+  hcons(:,1:numspqn)= 9999
+  hcons(:,numspqn+1)= nummpenergies
+  hcons(:,numspqn+2)= nummpstates
 
   READ(31,"(XXXX)",ADVANCE="NO")
   DO nqn= 1, numspqn
     READ(31,"(A12)",ADVANCE="NO") namespqn_read
     IF ( namespqn_read /= namespqn(nqn) ) THEN
-      STOP "INDATA_BLOCKCONSTRAINS: namespqn mismatch"
+      STOP "INDATA_HCONSTRAINS: namespqn mismatch"
     END IF
   END DO
   READ(31,*)
 
-  DO nc= 1, numblockcons
+  DO nc= 1, numhcons
     READ(31,"(I3,X)",ADVANCE="NO") nc_read
     IF ( nc_read /= nc ) THEN
-      STOP "INDATA_BLOCKCONSTRAINS: constrain wrong #"
+      STOP "INDATA_HCONSTRAINS: constrain wrong #"
     END IF
     DO nqn= 1, numspqn + 2
       READ(31,"(A12)",ADVANCE="NO") cons_read
       IF (TRIM(ADJUSTL(cons_read)) /= "*") THEN
-        READ(cons_read,*) blockcons(nc,nqn)
+        READ(cons_read,*) hcons(nc,nqn)
       END IF        
     END DO
     READ(31,*)
   END DO
 
-END SUBROUTINE INDATA_BLOCKCONSTRAINS
+END SUBROUTINE INDATA_HCONSTRAINS
 
 !===================================================================
 SUBROUTINE INDATA_COULOMB_X( citype, numci, ci_x )

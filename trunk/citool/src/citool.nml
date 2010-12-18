@@ -1,28 +1,31 @@
  &indata_singleparticle
-                 numspstates_e= 24 ,
-                 numspqn_e= 2 ,
-                 numspstates_h= 0 ,
-                 numspqn_h= 0                     /
+                 numspstates_e= 6 ,
+                 numspstates_h= 0                 /
 
  &indata_multiparticle
-                 num_e= 6 ,
+                 num_e= 3 ,
                  num_h= 0 ,
-                 nummpenergies= 8 ,
-                 nummpstates= 8 ,
+                 nummpenergies= 6 ,
+                 nummpstates= 6 ,
                  complexrun= .FALSE.              /
 
-
  &indata_inoutput
+                 citoolnml_version= "0.9" ,
                  filein_spstates_e= "spstates.dat" ,
                  filein_spstates_h= "" ,
                  fileinformat_coulomb= "dat real8" ,
                  filein_coulomb_ee= "Vee.dat" ,
                  filein_coulomb_hh= "Vhh.dat" ,
                  filein_coulomb_eh= "Veh.dat" ,
+                 filein_hconstrains_e = "constrains_e.dat" ,
+                 filein_hconstrains_h = "" ,
                  fileoutBIN_hspace= "hspace.bin" ,
                  fileoutASC_hspace= "hspace.txt" ,
                  fileoutBIN_mpstates= "mpstates.bin" ,
+                 cutoff_fileoutBIN_mpstates = 0. ,
                  fileoutASC_mpstates= "mpstates.txt" ,
+                 cutoff_fileoutASC_mpstates = 1e-6 ,
                  loglevel= 0 ,
                  statusfile= "status.txt",
-                 runname= "testhex.1"             /
+                 runname= "test_V0.9"             /
+

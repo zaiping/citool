@@ -21,11 +21,11 @@ INTEGER, INTENT(IN) :: spqn_h(1:,1:)
 INTEGER, INTENT(IN) :: dimhspace_h
 INTEGER*8, INTENT(IN) :: ket_h(1:)
 INTEGER, INTENT(IN) :: consline_h(1:)
-INTEGER*8, INTENT(OUT) :: ket(1:,1:)
+INTEGER*8, ALLOCATABLE, INTENT(OUT) :: ket(:,:)
 INTEGER, INTENT(OUT) :: dimhspacecons
 
 LOGICAL :: incl_e(dimhspace_e), incl_h(dimhspace_h)
-INTEGER :: dimhspace, sumqn, nke, nkh
+INTEGER :: dimhspace, dimket, sumqn, nke, nkh
 INTEGER :: nn, nqn, ns
 
 dimhspace= dimhspace_e * dimhspace_h
@@ -56,6 +56,8 @@ DO nn= 1, dimhspace_h
   END DO
 END DO
 
+dimket= COUNT(incl_e)*COUNT(incl_h)
+ALLOCATE( ket(dimket,2) )
 ket(:,:)= 0
 dimhspacecons= 0
 DO nn= 1, dimhspace
@@ -67,6 +69,8 @@ DO nn= 1, dimhspace
     ket(dimhspacecons,2)= ket_h(nkh)
   END IF
 END DO
+
+IF ( dimket /= dimhspacecons ) STOP "composehspace: dimket /= dimhspacecons"
 
 END SUBROUTINE composehspace
 

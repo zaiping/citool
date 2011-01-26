@@ -125,18 +125,21 @@ SUBROUTINE INDATA_GET(nmlfile)
 END SUBROUTINE INDATA_GET
 
 !===================================================================
-SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn, namespqn, spqn, spenergy )
+SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn,  &
+     &  namespqn, typespqn, spqn, spenergy )
   IMPLICIT NONE
 ! reads the single-particle states and energies
   CHARACTER(*), INTENT(IN) :: partype
   INTEGER, INTENT(IN) :: numspstates
   INTEGER, INTENT(OUT) :: numspqn
   CHARACTER(LEN=12), ALLOCATABLE, INTENT(OUT) :: namespqn(:)
+  CHARACTER(LEN=12), ALLOCATABLE, INTENT(OUT) :: typespqn(:)
   INTEGER, ALLOCATABLE, INTENT(OUT) :: spqn(:,:)
   REAL*8, ALLOCATABLE, INTENT(OUT) :: spenergy(:)
 
   CHARACTER(80) :: filein_spstates
   CHARACTER(1) :: partype_arg, partype_read
+  CHARACTER(6) :: string6
   INTEGER :: numspstates_read
   INTEGER :: ns_read
   INTEGER :: ns, nqn
@@ -176,49 +179,60 @@ SUBROUTINE INDATA_SPSTATES( partype, numspstates, numspqn, namespqn, spqn, spene
   END IF
 
   ALLOCATE(namespqn(numspqn))
+  ALLOCATE(typespqn(numspqn))
   ALLOCATE(spqn(numspstates,numspqn))
   ALLOCATE(spenergy(numspstates))
 
-  READ(31,"(XXXX)",ADVANCE="NO")
+  READ(31,"(A6)",ADVANCE="NO") string6
+  IF (string6/="NAME: " .AND. string6/="name: ") STOP "INDATA_SPSTATES: 3rd line error"
   DO nqn= 1, numspqn
     READ(31,"(A12)",ADVANCE="NO") namespqn(nqn)
   END DO
   READ(31,*)
 
-  spenergy(:)= -9999.9999d99
+  READ(31,"(A6)",ADVANCE="NO") string6
+  IF (string6/="TYPE: " .AND. string6/="type: ") STOP "INDATA_SPSTATES: 4th line error"
+  DO nqn= 1, numspqn
+    READ(31,"(A12)",ADVANCE="NO") typespqn(nqn)
+  END DO
+  READ(31,*)
+
+  spenergy(:)= 0d0
   DO ns= 1, numspstates
-    READ(31,"(I3,X)",ADVANCE="NO") ns_read
+    READ(31,"(I4,XX)",ADVANCE="NO") ns_read
     IF ( ns_read < 1 .OR. ns_read > numspstates ) THEN
       STOP "INDATA_SPSTATES: sp state # < 1 or > numspstates"
     END IF
-    IF ( spenergy(ns_read) /= -9999.9999d99 ) THEN
-      STOP "INDATA_SPSTATES: possibly double-defined sp state"
+    IF ( spenergy(ns_read) /= 0d0 ) THEN
+      STOP "INDATA_SPSTATES: double-defined sp state"
     END IF
     DO nqn= 1, numspqn
       READ(31,"(I12)",ADVANCE="NO") spqn(ns_read,nqn)
     END DO
     READ(31,*) spenergy(ns_read)
   END DO
-  
+
   CLOSE(31)
 
 END SUBROUTINE INDATA_SPSTATES
 
 !===================================================================
-SUBROUTINE INDATA_HCONSTRAINS( partype, numspqn, namespqn,   &
+SUBROUTINE INDATA_HCONSTRAINS( partype, numspqn, namespqn, typespqn,  &
      &  numhcons, hcons )
   IMPLICIT NONE
 ! reads the block contrains file
   CHARACTER(*), INTENT(IN) :: partype
   INTEGER, INTENT(IN) :: numspqn
   CHARACTER(LEN=12), INTENT(IN) :: namespqn(numspqn)
+  CHARACTER(LEN=12), INTENT(IN) :: typespqn(numspqn)
   INTEGER, INTENT(OUT) :: numhcons
   INTEGER, ALLOCATABLE, INTENT(OUT) :: hcons(:,:)
 
   CHARACTER(80) :: filein_hconstrains
   CHARACTER(1) :: partype_arg, partype_read
   INTEGER :: numspqn_read
-  CHARACTER(LEN=12) :: namespqn_read, cons_read
+  CHARACTER(6) :: string6
+  CHARACTER(LEN=12) :: namespqn_read, typespqn_read, cons_read
 
   INTEGER :: nc_read, nc, nqn
 
@@ -260,7 +274,8 @@ SUBROUTINE INDATA_HCONSTRAINS( partype, numspqn, namespqn,   &
   hcons(:,numspqn+1)= nummpenergies
   hcons(:,numspqn+2)= nummpstates
 
-  READ(31,"(XXXX)",ADVANCE="NO")
+  READ(31,"(A6)",ADVANCE="NO") string6
+  IF (string6/="NAME: " .AND. string6/="name: ") STOP "INDATA_SPSTATES: 3rd line error"
   DO nqn= 1, numspqn
     READ(31,"(A12)",ADVANCE="NO") namespqn_read
     IF ( namespqn_read /= namespqn(nqn) ) THEN
@@ -269,8 +284,18 @@ SUBROUTINE INDATA_HCONSTRAINS( partype, numspqn, namespqn,   &
   END DO
   READ(31,*)
 
+  READ(31,"(A6)",ADVANCE="NO") string6
+  IF (string6/="TYPE: " .AND. string6/="type: ") STOP "INDATA_SPSTATES: 4th line error"
+  DO nqn= 1, numspqn
+    READ(31,"(A12)",ADVANCE="NO") typespqn_read
+    IF ( typespqn_read /= typespqn(nqn) ) THEN
+      STOP "INDATA_HCONSTRAINS: typespqn mismatch"
+    END IF
+  END DO
+  READ(31,*)
+
   DO nc= 1, numhcons
-    READ(31,"(I3,X)",ADVANCE="NO") nc_read
+    READ(31,"(I4,XX)",ADVANCE="NO") nc_read
     IF ( nc_read /= nc ) THEN
       STOP "INDATA_HCONSTRAINS: constrain wrong #"
     END IF

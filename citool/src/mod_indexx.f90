@@ -19,7 +19,7 @@ INTEGER, INTENT(OUT) :: indx(nelem)
 INTEGER, PARAMETER :: M= 7 , NSTACK= 50
 
 INTEGER i, indxt, ir, itemp, j, jstack, k, l, istack(NSTACK)
-REAL a
+REAL*8 :: a
 DO j= 1, nelem
   indx(j)= j
 END DO

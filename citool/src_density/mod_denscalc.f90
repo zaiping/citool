@@ -6,27 +6,30 @@ MODULE mod_denscalc
 
 CONTAINS
 
-SUBROUTINE DENSCALC( blockdim, mpstate, numspstates_C, ket_C, numx_C, psi_C, &
-     &  mask, numspstates_O, ket_O, dens )
+SUBROUTINE DENSCALC( blockdim, mpstate, numspstates_C, ket_C, masksp,  &
+     &               numspwf_C, numx_C, psi_C, indxpsi_C,            &
+     &               numspstates_O, ket_O, dens )
 
 IMPLICIT NONE
 !
 ! "C" stands for e or h i.e. the carrier for which the dens is obtained
 ! "O" stands for h or e i.e. the other carrier
 !
-! "S" stands for 0 or 1 i.e. the spin for which the dens is obtained
-! "N" stands for 1 or 0 i.e. the other spin
+!!!! "S" stands for 0 or 1 i.e. the spin for which the dens is obtained
+!!!! "N" stands for 1 or 0 i.e. the other spin
 !
 INTEGER, INTENT(IN) :: blockdim
-REAL*8,  INTENT(IN) :: mpstate(:)   !(blockdim)
+REAL*8,  INTENT(IN) :: mpstate(:)     !(blockdim)
 INTEGER, INTENT(IN) :: numspstates_C
-INTEGER*8, INTENT(IN) :: ket_C(:)   !(blockdim)
+INTEGER*8, INTENT(IN) :: ket_C(:)     !(blockdim)
+LOGICAL, INTENT(IN) :: masksp(:)      !(numspstates_C)
+INTEGER, INTENT(IN) :: numspwf_C
 INTEGER, INTENT(IN) :: numx_C
-REAL*8,  INTENT(IN) :: psi_C(:,:)   !(numx)
-LOGICAL, INTENT(IN) :: mask(:)      !(numspstates_C)
+REAL*8,  INTENT(IN) :: psi_C(:,:)     !(numx_C,numspwf_C)
+INTEGER, INTENT(IN) :: indxpsi_C(:)   !(numspstates_C)
 INTEGER, INTENT(IN) :: numspstates_O
 INTEGER*8, INTENT(IN) :: ket_O(:)   !(blockdim)
-REAL*8, INTENT(OUT) :: dens(:)      !(numx)
+REAL*8, INTENT(OUT) :: dens(:)      !(numx_C)
 
 INTEGER, ALLOCATABLE :: matcc(:,:)
 INTEGER*8 :: klef, krig
@@ -51,9 +54,9 @@ DO nl= 1, blockdim
 
     matcc= 0
     DO ns= 1, numspstates_C
-      IF ( .NOT. mask(ns) ) CYCLE
+      IF ( .NOT. masksp(ns) ) CYCLE
       DO nsp= 1, numspstates_C
-        IF ( .NOT. mask(nsp) ) CYCLE
+        IF ( .NOT. masksp(nsp) ) CYCLE
         klef= ket_C(nlp)
         krig= ket_C(nl)
         IF ( BTEST(krig,ns-1) .AND. BTEST(klef,nsp-1) ) THEN
@@ -78,7 +81,8 @@ DO nl= 1, blockdim
         IF (matcc(nsp,ns) /= 0) THEN
 
           DO nx= 1, numx_C
-            dens(nx)= dens(nx) + clcl * matcc(nsp,ns) * psi_C(nx,nsp)*psi_C(nx,ns)
+            dens(nx)= dens(nx) + clcl * matcc(nsp,ns) *    &
+                 &               psi_C(nx,indxpsi_C(nsp))*psi_C(nx,indxpsi_C(ns))
           END DO
                        
         END IF

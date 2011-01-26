@@ -1,14 +1,14 @@
 !$$$$$$$$$$$$$$$$$$$$$$$$$$  density4CItool  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 PROGRAM MAIN 
+  USE mod_indatadensity
+  USE mod_denscalc
+  USE mod_inoutrs
   USE mod_indata  !(from CItool program)
   USE mod_logga
   USE mod_myaux
   USE mod_specialf
   USE mod_indexx
-  USE mod_specialf
-  USE mod_inoutrs
-  USE mod_denscalc
   IMPLICIT NONE
 !*************************************************************************
 !* density4CItool  obtains the real-space charge density of the
@@ -20,10 +20,10 @@ PROGRAM MAIN
 !*  11 jun 2010 - 14 jun 2010     ifort 11 compiler      by Andrea Bertoni
 !*************************************************************************
 
-CHARACTER(80), PARAMETER :: citool_version= "0.9"
-INTEGER :: dimhspace_e, dimhspace_h
+CHARACTER(80), PARAMETER :: density4citool_version= "0.9"
 
 ! constrains on H (allocated in indata_blockconstrains)
+INTEGER :: dimhspace_e, dimhspace_h
 INTEGER :: numhcons_e, numhcons_h
 INTEGER :: numhcons_e_read, numhcons_h_read
 INTEGER, ALLOCATABLE :: hcons_e(:,:)
@@ -48,16 +48,28 @@ REAL*8, ALLOCATABLE :: mpenergies_read(:,:)
 REAL*8, ALLOCATABLE :: mpstates(:,:)
 REAL*8, ALLOCATABLE :: mpstates_read(:,:)
 
-LOGICAL, ALLOCATABLE :: masksp_e(:)
-LOGICAL, ALLOCATABLE :: masksp_h(:)
+! SP states
 INTEGER :: numspqn_e, numspqn_h
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_e(:)
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_h(:)
+CHARACTER(LEN=12), ALLOCATABLE :: typespqn_e(:)
+CHARACTER(LEN=12), ALLOCATABLE :: typespqn_h(:)
 INTEGER, ALLOCATABLE :: spqn_e(:,:)
 INTEGER, ALLOCATABLE :: spqn_h(:,:)
 REAL*8, ALLOCATABLE :: spenergy_e(:)
 REAL*8, ALLOCATABLE :: spenergy_h(:)
+
+! description of densities to be computed
+INTEGER :: numdensdesc_e, numdensdesc_h
+INTEGER, ALLOCATABLE :: densdesc_e(:,:)
+INTEGER, ALLOCATABLE :: densdesc_h(:,:)
+CHARACTER(80), ALLOCATABLE :: densfiles_e(:)
+CHARACTER(80), ALLOCATABLE :: densfiles_h(:)
+LOGICAL, ALLOCATABLE :: masksp(:)
+
+! psi wave functions
 INTEGER :: numx_e, numx_h
+INTEGER :: numspwf_e, numspwf_h
 REAL*8, ALLOCATABLE ::  psi_e(:,:)       ! sp wave functions for ELECs
 REAL*8, ALLOCATABLE ::  psi_h(:,:)       ! sp wave functions for HOLEs
 
@@ -69,38 +81,47 @@ INTEGER, ALLOCATABLE :: indx_mpene(:)
 
 ! aux vars
 REAL*8, ALLOCATABLE :: dens(:)
+REAL*8, ALLOCATABLE :: densTOT(:)
 INTEGER :: wantblockdim, wantblockfr, wantblockto
 CHARACTER(80) :: string80
 REAL*8 :: normsum, denssum
 LOGICAL :: found= .FALSE.
 INTEGER :: ncons_e, ncons_h, ncons_e_read, ncons_h_read
-INTEGER :: ns, nx, nb, nmpene, ne
+INTEGER :: pospsiqn 
+INTEGER :: nwant
+INTEGER :: ns, nx, nb, nmpene, ne, ndd
+
 
 !.........................................init vars definitions and readout
+CALL INDATADENSITY_GET("density4CItool.nml")
+
 CALL INDATA_GET("citool.nml")
+
 CALL LOGGA(3, "                 ")
-CALL LOGGA(3, "  ===  START density4CItool for v. "//TRIM(citool_version)//"  ====")
-IF (TRIM(citoolnml_version) /= TRIM(citool_version)) THEN
-  CALL LOGGA(3, "WARNING: input namelist version is "//TRIM(citoolnml_version))
+CALL LOGGA(3, "  ===  START density4CItool v. "//TRIM(density4citool_version)//"  ====")
+IF (TRIM(density4citoolnml_version) /= TRIM(density4citool_version)) THEN
+  CALL LOGGA(3, "WARNING: input density namelist version is "//TRIM(density4citoolnml_version))
+END IF
+IF (TRIM(citoolnml_version) /= TRIM(density4citool_version)) THEN
+  CALL LOGGA(3, "WARNING: citool input namelist version is "//TRIM(citoolnml_version))
 END IF
 
-!........reads single-particle states (energies and qn) and wave functions
-ALLOCATE(masksp_e(numspstates_e))
-ALLOCATE(masksp_h(numspstates_h))
-
+!.....................................reads single-particle states (energies and qn)
 CALL LOGGA(2, "number of ELECTRONS: ", num_e)
 IF (num_e>0) THEN
   CALL LOGGA(2, "reads single particle ELEC states", numspstates_e)
   CALL INDATA_SPSTATES( "e", numspstates_e, numspqn_e,    &
-       &  namespqn_e, spqn_e, spenergy_e )
-  CALL LOGGA(2, "reading single-particle wave functions for ELECs")
-  ! psi_e is allocated inside the routine
-  CALL INSPWF(numspstates_e, numx_e, psi_e, FILEwavefunction_e)
+       &  namespqn_e, typespqn_e, spqn_e, spenergy_e )
+!  CALL LOGGA(2, "reading single-particle wave functions for ELECs")
+!  ! psi_e is allocated inside the routine
+!  CALL INSPWF(numspstates_e, numx_e, psi_e, filein_wavefunction_e)
 ELSE
   numspstates_e= 1
   numspqn_e= 1
   ALLOCATE(namespqn_e(numspqn_e))
   namespqn_e(1)= "fictiousEqn"
+  ALLOCATE(typespqn_e(numspqn_e))
+  typespqn_e(1)= "fictiousEty"
   ALLOCATE(spqn_e(numspstates_e,numspqn_e))
   spqn_e(1,1)= 0
   ALLOCATE(spenergy_e(numspstates_e))
@@ -112,15 +133,17 @@ CALL LOGGA(2, "number of HOLES: ", num_h)
 IF (num_h>0) THEN
   CALL LOGGA(2, "reads single particle HOLE states", numspstates_h)
   CALL INDATA_SPSTATES( "h", numspstates_h, numspqn_h,    &
-       &  namespqn_h, spqn_h, spenergy_h )
-  CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
-  ! psi_h is allocated inside the routine
-  CALL INSPWF(numspstates_h, numx_h, psi_h, FILEwavefunction_h)
+       &  namespqn_h, typespqn_h, spqn_h, spenergy_h )
+!  CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
+!  ! psi_h is allocated inside the routine
+!  CALL INSPWF(numspstates_h, numx_h, psi_h, filein_wavefunction_h)
 ELSE
   numspstates_h= 1
   numspqn_h= 1
   ALLOCATE(namespqn_h(numspqn_h))
   namespqn_h(1)= "fictiousHqn"
+  ALLOCATE(typespqn_h(numspqn_h))
+  typespqn_h(1)= "fictiousHty"
   ALLOCATE(spqn_h(numspstates_h,numspqn_h))
   spqn_h(1,1)= 0
   ALLOCATE(spenergy_h(numspstates_h))
@@ -128,32 +151,46 @@ ELSE
   CALL LOGGA(2, "fictious single part HOLE states considered:", numspstates_h)
 END IF
 
-!......................................checks normalization of sp states
+
+!..................................reads single-particle wave functions
 IF (num_e>0) THEN
-  CALL LOGGA(2, "normalization of ELEC sp states")
-  DO ns= 1, numspstates_e
-    normsum= 0.
-    DO nx= 1, numx_e
-      normsum= normsum + ABS( psi_e(nx,ns) )**2
-    END DO
-    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
-  END DO
+  CALL LOGGA(2, "reading single-particle wave functions for ELECs")
+  ! psi_e is allocated inside the routine
+  CALL INSPWF(numspwf_e, numx_e, psi_e, fileinBIN_psi_e)
 END IF
 
 IF (num_h>0) THEN
-  CALL LOGGA(2, "normalization of HOLE sp states")
-  DO ns= 1, numspstates_h
-    normsum= 0.
-    DO nx= 1, numx_h
-      normsum= normsum + ABS( psi_h(nx,ns) )**2
-    END DO
-    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
-  END DO
+  CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
+  ! psi_h is allocated inside the routine
+  CALL INSPWF(numspwf_h, numx_h, psi_h, fileinBIN_psi_h)
 END IF
+
+!!$!......................................checks normalization of sp wave function
+!!$IF (num_e>0) THEN
+!!$  CALL LOGGA(2, "normalization of ELEC sp states")
+!!$  DO ns= 1, numspstates_e
+!!$    normsum= 0.
+!!$    DO nx= 1, numx_e
+!!$      normsum= normsum + ABS( psi_e(nx,ns) )**2
+!!$    END DO
+!!$    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
+!!$  END DO
+!!$END IF
+!!$
+!!$IF (num_h>0) THEN
+!!$  CALL LOGGA(2, "normalization of HOLE sp states")
+!!$  DO ns= 1, numspstates_h
+!!$    normsum= 0.
+!!$    DO nx= 1, numx_h
+!!$      normsum= normsum + ABS( psi_h(nx,ns) )**2
+!!$    END DO
+!!$    CALL LOGGA(2, " norm of state "//STRING(ns,3), normsum)
+!!$  END DO
+!!$END IF
 
 !..........................................reads possible constrains on H
 IF (filein_hconstrains_e /= "" .AND. num_e>0) THEN
-  CALL INDATA_HCONSTRAINS("e", numspqn_e, namespqn_e,   &
+  CALL INDATA_HCONSTRAINS("e", numspqn_e, namespqn_e, typespqn_e,  &
        &  numhcons_e, hcons_e)
   CALL LOGGA(2, "num of constraints on H for ELECS", numhcons_e)
 ELSE
@@ -166,7 +203,8 @@ ELSE
 END IF
 
 IF (filein_hconstrains_h /= "" .AND. num_h>0) THEN
-  CALL INDATA_HCONSTRAINS("h", numspqn_h, namespqn_h,   &
+  STOP "main: nonvoid filein_hconstrains_h  not implemented"
+  CALL INDATA_HCONSTRAINS("h", numspqn_h, namespqn_h, typespqn_h,  &
        &  numhcons_h, hcons_h)
   CALL LOGGA(2, "num of constraints on H for HOLES:", numhcons_h)
 ELSE
@@ -178,12 +216,31 @@ ELSE
   CALL LOGGA(2, "no constrain on blocks for HOLES")
 END IF
 
+!................reads the description of the densities to be computed
+IF (filein_densdescription_e /= "" .AND. num_e>0) THEN
+  CALL INDATADENSITY_DENSDESCRIPTION("e", numspqn_e, namespqn_e,typespqn_e,  &
+       &  numdensdesc_e, densdesc_e, densfiles_e )
+  CALL LOGGA(2, "num of densities to be computed for ELECS", numdensdesc_e)
+ELSE
+  numdensdesc_e= 0
+  CALL LOGGA(2, "no density to be computed for ELECS")
+END IF
+
+IF (filein_densdescription_h /= "" .AND. num_h>0) THEN
+  CALL INDATADENSITY_DENSDESCRIPTION("h", numspqn_h, namespqn_h,typespqn_h,  &
+       &  numdensdesc_h, densdesc_h, densfiles_h )
+  CALL LOGGA(2, "num of densities to be computed for HOLES", numdensdesc_h)
+ELSE
+  numdensdesc_h= 0
+  CALL LOGGA(2, "no density to be computed for HOLES")
+END IF
+
 
 !...................................reads the reordered total Hilbert space
 CALL LOGGA(3, "reading Hilbert space from "//TRIM(fileoutBIN_hspace))
 OPEN(22, FILE=TRIM(fileoutBIN_hspace), ACTION="READ", FORM="UNFORMATTED")
 READ(22) string80
-IF (TRIM(string80) /= TRIM(citool_version)) STOP "wrong citool_version in bin hspace file"
+IF (TRIM(string80) /= TRIM(density4citool_version)) STOP "wrong citool_version in bin hspace file"
 READ(22) string80
 IF (TRIM(string80) /= TRIM(runname)) STOP "wrong runname in bin hspace file"
 READ(22) dimhspace_e, dimhspace_h
@@ -205,7 +262,7 @@ DO ncons_e= 1, numhcons_e
     ALLOCATE( ket_read(dimhspacecons_read,2) )
     READ(22) blockstart_read(1:numblock_read+1)
     READ(22) ket_read
-    IF (ncons_e==WANTCONSE .AND. ncons_h==WANTCONSH) THEN
+    IF (ncons_e==want_cons .AND. ncons_h==1) THEN
       found= .TRUE.
       dimhspacecons= dimhspacecons_read
       numblock= numblock_read
@@ -219,7 +276,7 @@ DO ncons_e= 1, numhcons_e
   END DO
 END DO
 CLOSE(22)
-IF (.NOT. found) STOP "MAIN: WANTCONSE/WANTCONSH not found for H"
+IF (.NOT. found) STOP "MAIN: want_cons not found for H"
 CALL LOGGA(2, "Hilbert space dimension:", dimhspacecons)
 
 
@@ -227,7 +284,7 @@ CALL LOGGA(2, "Hilbert space dimension:", dimhspacecons)
 CALL LOGGA(2, "reading multi-carrier states from "//TRIM(fileoutBIN_mpstates))
 OPEN(22, FILE=TRIM(fileoutBIN_mpstates), ACTION="READ", FORM="UNFORMATTED")
 READ(22) string80
-IF (TRIM(string80) /= TRIM(citool_version)) STOP "wrong citool_version in bin mpstates file"
+IF (TRIM(string80) /= TRIM(density4citool_version)) STOP "wrong citool_version in bin mpstates file"
 READ(22) string80
 IF (TRIM(string80) /= TRIM(runname)) STOP "wrong runname in bin mpstates file"
 READ(22) cutoff_fileoutBIN_mpstates_read
@@ -258,7 +315,7 @@ DO ncons_e= 1, numhcons_e
     READ(22) blocknummpenergies_read
     READ(22) mpstates_read
     READ(22) blocknummpstates_read
-    IF (ncons_e==WANTCONSE .AND. ncons_h==WANTCONSH) THEN
+    IF (ncons_e==want_cons .AND. ncons_h==1) THEN
       found= .TRUE.
       IF (dimhspacecons/=dimhspacecons_read) STOP "MAIN: dimhspacecons in mp file"
       IF (numblock/=numblock_read) STOP "MAIN: numblock in mp file"
@@ -279,8 +336,10 @@ DO ncons_e= 1, numhcons_e
     DEALLOCATE( blocknummpstates_read )
   END DO
 END DO
-IF (.NOT. found) STOP "MAIN: WANTCONSE/WANTCONSH not found for mp"
+IF (.NOT. found) STOP "MAIN: want_cons not found for mp"
 
+print*, "dimhspacecons, numblock = ", dimhspacecons, numblock
+print*, "nummpenergiescons, nummpstatescons", nummpenergiescons, nummpstatescons
 
 !..........................finds the mp states order with increasing energy
 CALL LOGGA(2, "finding the mp states order with increasing energy")
@@ -299,7 +358,13 @@ DO nb= 1, numblock
   END DO
 END DO
 
+print*, "nmpene", nmpene
+print*, "ene_mpene", ene_mpene
+print*, "indx_mpene", indx_mpene
+
 CALL indexx(nmpene, ene_mpene, indx_mpene)
+
+print*, "after call indexx"
 
 DO ne= 1, nmpene
   CALL LOGGA(2, " BLOCK: "//STRING(nblock_mpene(indx_mpene(ne)),4)//     &
@@ -309,103 +374,90 @@ DO ne= 1, nmpene
   !     &  nblock_mpene(indx_mpene(ne)), nrank_mpene(indx_mpene(ne))
 END DO
 
-!..........................................decides which mp state to consider
-IF ( WANTBLOCK == 0 ) THEN
-  WANTBLOCK= nblock_mpene(indx_mpene(1))
-  WANTRANK= nrank_mpene(indx_mpene(1))
+!..........................................decides which mp state(s) to consider
+IF ( want_energylevel > nmpene ) STOP "MAIN: want_energylevel > nmpene"
+IF ( want_energylevel /= 0 ) THEN
+  want_block(1)= nblock_mpene(indx_mpene(want_energylevel))
+  want_rank(1)= nrank_mpene(indx_mpene(want_energylevel))
+  numwantmpstates= 1
 END IF
-wantblockdim= blockstart(WANTBLOCK+1)-blockstart(WANTBLOCK)
-wantblockfr= blockstart(WANTBLOCK)
-wantblockto= blockstart(WANTBLOCK+1)-1
 
+CALL LOGGA(2, "number of MP states included=", numwantmpstates)
 
-!:::::::::::::::::::::::::::::::::::::::::: ELEC density calculation  :::::::
+DO nwant= 1, numwantmpstates
+  print*, "zz", nwant, want_block(nwant), want_rank(nwant), blocknummpenergies(want_block(nwant))
+  IF (want_block(nwant)>numblock .OR.  want_rank(nwant)>blocknummpenergies(want_block(nwant)))  &
+       &  STOP "MAIN: want_block/rank too large"
+END DO
 
-CALL LOGGA(2, "ELECTRON density of mp state BLOCK", WANTBLOCK)
-CALL LOGGA(2, "ELECTRON density of mp state RANK ", WANTRANK)
-
+!:::::::::::::::::::::::::::::::::::::::::::::: ELEC density calculation  :::::::
 ALLOCATE(dens(numx_e))
+ALLOCATE(densTOT(numx_e))
+ALLOCATE(masksp(numspstates_e))
 
-!......................................calculating total ELECTRON density
-IF (FILEdensTOTe /= "") THEN
-  masksp_e= .TRUE.
+!.........................................finding psi-type SP quantum number
+pospsiqn= 0
+DO nx= 1, numspqn_e
+  IF (INDEX(typespqn_e(nx),"psi") /= 0 .OR. INDEX(typespqn_e(nx),"PSI") /= 0) THEN
+    pospsiqn= pospsiqn * 9999 + nx
+  END IF
+END DO
+IF (pospsiqn < 1 .OR. pospsiqn > 9999) STOP "no or multiple psi qn type"
+CALL LOGGA(2, " ELEC SP psi-type qn is n.", pospsiqn)
 
-  CALL LOGGA(2, "calculating Total ELECTRON density")
-  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),             &
-       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-  CALL OUTDENS( numx_e, dens, FILEdensTOTe, denssum )
-  CALL LOGGA(2, "integrated Total density=", denssum)
-END IF
+!............................................. loop on density descriptions
+DO ndd= 1, numdensdesc_e
+  densTOT= 0.
 
-!...................................finding SPIN quantum number
-IF (FILEdensUPe /= "" .OR. FILEdensDNe /= "") THEN
-  ne= 0
-  DO nx= 1, numspqn_e
-    !print*, namespqn_e(nx)
-    IF (INDEX(namespqn_e(nx),"spin") /= 0) THEN
-      !print*, "zzzz"
-      ne= ne*9999 + nx
-    END IF
-  END DO
-  IF (ne < 1 .OR. ne > 9999) STOP "no or multiple spin sp qn"
-  CALL LOGGA(2, " ELEC sp SPIN is QN", ne)
-  !print*, namespqn_e(:)
-END IF
+  CALL LOGGA(2, "computing ELEC density n. ", ndd)
 
-!...................................calculating SPIN-UP ELECTRON density
-IF (FILEdensUPe /= "") THEN
-  CALL LOGGA(2, "Computing density of sp ELEC SPIN-UP states:")
+  !..................................selecting elec SP states to be included
+  masksp= .TRUE.
   DO ns= 1, numspstates_e
-    IF (spqn_e(ns,ne)==1) THEN
-      masksp_e(ns)= .TRUE.
-      CALL LOGGA(2, "  ", ns)
-    ELSE IF (spqn_e(ns,ne)==0) THEN
-      masksp_e(ns)= .FALSE.
-    ELSE
-      STOP "spin QN /= 0 or 1 in sp file"
-    END IF
+    DO nx= 1, numspqn_e
+      IF (densdesc_e(ndd,nx) /= 9999 .AND. densdesc_e(ndd,nx) /= spqn_e(ns,nx)) THEN
+        masksp(ns)= .FALSE.
+      END IF
+    END DO
   END DO
 
-  CALL LOGGA(2, "calculating SPIN UP ELECTRON density")
-  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
-       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-  CALL OUTDENS( numx_e, dens, FILEdensUPe, denssum )
-  CALL LOGGA(2, "integrated spin Up density=", denssum)
-END IF
+  DO nwant= 1, numwantmpstates
+    dens= 0.
 
-!...................................calculating SPIN-DN ELECTRON density
-IF (FILEdensDNe /= "") THEN
-  CALL LOGGA(2, "Computing density of sp ELEC SPIN-DN states:")
-  DO ns= 1, numspstates_e
-    IF (spqn_e(ns,ne)==0) THEN
-      masksp_e(ns)= .TRUE.
-      CALL LOGGA(2, "  ", ns)
-    ELSE IF (spqn_e(ns,ne)==1) THEN
-      masksp_e(ns)= .FALSE.
-    ELSE
-      STOP "spin QN /= 0 or 1 in sp file"
-    END IF
+    CALL LOGGA(2, " ELEC density of mp state ", nwant)
+    CALL LOGGA(2, " BLOCK", want_block(nwant))
+    CALL LOGGA(2, " RANK ", want_rank(nwant))
+
+    wantblockdim= blockstart(want_block(nwant)+1)-blockstart(want_block(nwant))
+    wantblockfr= blockstart(want_block(nwant))
+    wantblockto= blockstart(want_block(nwant)+1)-1
+
+    CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,want_rank(nwant)),  &
+         &  numspstates_e, ket(wantblockfr:wantblockto,1), masksp,                    &
+         &  numspwf_e, numx_e, psi_e, spqn_e(1:numspstates_e,pospsiqn),               &
+         &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
+    densTOT= densTOT + dens
+
   END DO
 
-  CALL LOGGA(2, "calculating SPIN DN ELECTRON density")
-  CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,WANTRANK),         &
-       &  numspstates_e, ket(wantblockfr:wantblockto,1), numx_e, psi_e, masksp_e,  &
-       &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
-  CALL OUTDENS( numx_e, dens, FILEdensDNe, denssum )
-  CALL LOGGA(2, "integrated spin Down density=", denssum)
-END IF
+  !.....................................................writing density to files
+  densTOT= densTOT/numwantmpstates
+  CALL OUTDENS( numx_e, densTOT, densfiles_e(ndd), denssum )
+  CALL LOGGA(2, "integrated TOTAL density=", denssum)
 
+END DO
+
+!......................................................finalizations
 DEALLOCATE(dens)
+DEALLOCATE(densTOT)
+DEALLOCATE(masksp)
 
 
-!:::::::::::::::::::::::::::::::::::::::::: HOLE density calculation  :::::::
+!:::::::::::::::::::::::::::::::::::::::::::::: HOLE density calculation  :::::::
 
-! not implemented
+! NOT IMPLEMENTED JET
 
 
-
-CALL LOGGA(3, "  == END ==")
+CALL LOGGA(3, "  == END density4CItool ==")
 
 END PROGRAM MAIN

@@ -33,6 +33,8 @@ PROGRAM MAIN
 INTEGER :: numspqn_e, numspqn_h
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_e(:)
 CHARACTER(LEN=12), ALLOCATABLE :: namespqn_h(:)
+CHARACTER(LEN=12), ALLOCATABLE :: typespqn_e(:)
+CHARACTER(LEN=12), ALLOCATABLE :: typespqn_h(:)
 INTEGER, ALLOCATABLE :: spqn_e(:,:)
 INTEGER, ALLOCATABLE :: spqn_h(:,:)
 REAL*8, ALLOCATABLE :: spenergy_e(:)
@@ -117,12 +119,15 @@ END IF
 CALL LOGGA(2, "number of ELECTRONS: ", num_e)
 IF (num_e>0) THEN
   CALL LOGGA(2, "reads single particle ELEC states", numspstates_e)
-  CALL INDATA_SPSTATES( "e", numspstates_e, numspqn_e, namespqn_e, spqn_e, spenergy_e )
+  CALL INDATA_SPSTATES( "e", numspstates_e, numspqn_e, namespqn_e, typespqn_e,  &
+       &  spqn_e, spenergy_e )
 ELSE
   numspstates_e= 1
   numspqn_e= 1
   ALLOCATE(namespqn_e(numspqn_e))
   namespqn_e(1)= "fictiousEqn"
+  ALLOCATE(typespqn_e(numspqn_e))
+  typespqn_e(1)= "fictiousEty"
   ALLOCATE(spqn_e(numspstates_e,numspqn_e))
   spqn_e(1,1)= 0
   ALLOCATE(spenergy_e(numspstates_e))
@@ -133,12 +138,15 @@ END IF
 CALL LOGGA(2, "number of HOLES: ", num_h)
 IF (num_h>0) THEN
   CALL LOGGA(2, "reads single particle HOLE states", numspstates_h)
-  CALL INDATA_SPSTATES( "h", numspstates_h, numspqn_h, namespqn_h, spqn_h, spenergy_h )
+  CALL INDATA_SPSTATES( "h", numspstates_h, numspqn_h, namespqn_h, typespqn_h,  &
+       &  spqn_h, spenergy_h )
 ELSE
   numspstates_h= 1
   numspqn_h= 1
   ALLOCATE(namespqn_h(numspqn_h))
   namespqn_h(1)= "fictiousHqn"
+  ALLOCATE(typespqn_h(numspqn_h))
+  typespqn_h(1)= "fictiousHty"
   ALLOCATE(spqn_h(numspstates_h,numspqn_h))
   spqn_h(1,1)= 0
   ALLOCATE(spenergy_h(numspstates_h))
@@ -148,7 +156,7 @@ END IF
 
 !..........................................reads possible constrains on H
 IF (filein_hconstrains_e /= "" .AND. num_e>0) THEN
-  CALL INDATA_HCONSTRAINS("e", numspqn_e, namespqn_e,   &
+  CALL INDATA_HCONSTRAINS("e", numspqn_e, namespqn_e, typespqn_e,   &
        &  numhcons_e, hcons_e)
   CALL LOGGA(2, "num of constraints on H for ELECS", numhcons_e)
 ELSE
@@ -161,7 +169,7 @@ ELSE
 END IF
 
 IF (filein_hconstrains_h /= "" .AND. num_h>0) THEN
-  CALL INDATA_HCONSTRAINS("h", numspqn_h, namespqn_h,   &
+  CALL INDATA_HCONSTRAINS("h", numspqn_h, namespqn_h, typespqn_h,   &
        &  numhcons_h, hcons_h)
   CALL LOGGA(2, "num of constraints on H for HOLES:", numhcons_h)
 ELSE
@@ -619,6 +627,8 @@ CALL LOGGA(2, "...done")
 CALL LOGGA(2, "deallocating remaining arrays...")
 DEALLOCATE( namespqn_e )
 DEALLOCATE( namespqn_h )
+DEALLOCATE( typespqn_e )
+DEALLOCATE( typespqn_h )
 DEALLOCATE( spqn_e )
 DEALLOCATE( spqn_h )
 DEALLOCATE( spenergy_e )

@@ -1,0 +1,994 @@
+\documentclass[12pt,twoside]{article}
+
+
+\author{ANDREA BERTONI}
+\oddsidemargin=.1in
+\evensidemargin=-.1in
+\textwidth=6.5truein
+\footskip=1.2in
+\topmargin=-.4in
+\textheight=8.5in
+% \baselineskip.3in
+% \renewcommand{\baselinestretch}{1.5}
+\parindent=0.in
+
+\newcommand*{\ket}[1]{\left|{#1}\right\rangle}
+\newcommand*{\bra}[1]{\langle{#1}|}
+\newcommand*{\CItool}[0]{{$\cal CI$}\textsf{tool} }
+
+\usepackage{graphicx}
+\usepackage{dcolumn}
+\usepackage{amsmath}
+\usepackage{alltt}
+
+\usepackage{float}
+\floatstyle{ruled}    % puts a border around figures
+\restylefloat{table}
+
+
+\usepackage{color}
+\usepackage{listings}  % questo non lo uso
+\lstset{ %
+language=Fortran,               % choose the language of the code
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+numbers=none,                   % where to put the line-numbers
+numberstyle=none,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=single,   		% adds a frame around the code
+tabsize=2,  		% sets default tabsize to 2 spaces
+captionpos=b,   		% sets the caption-position to bottom
+breaklines=true,    	% sets automatic line breaking
+breakatwhitespace=false,    % sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)}          % if you want to add a comment within your code
+}
+
+
+\begin{document}
+
+\centerline{\bf Description of i/o file format for \CItool and related codes}
+{\tiny Andrea Bertoni, January 2011 \ \ \  pdflatex'ed \today}
+
+\subsection*{Introduction and notation}
+
+\CItool is a full-Configuration-Interaction solver for a
+multi-particle (MP) system, namley electrons and holes.  It computes
+eigenvalues/vectors of the Hamiltonian
+\begin{equation}
+H=H_0+H_I
+\end{equation}
+on the basis of Slater determinants of single-particle (SP)
+states. The free-particle and interaction Hamiltonians read (in
+second-quantization formalism)
+\begin{eqnarray}
+H_0&=&\sum_n \epsilon_n e^\dagger_n e_n + \sum_m \bar\epsilon_m h^\dagger_m h_m
+\\ \nonumber
+H_I&=&\frac{1}{2}\sum_{\substack{n_1,n_2\\n_3,n_4}} V_{\substack{n_1,n_2\\n_3,n_4}}^{(ee)}
+e^\dagger_{n_1} e^\dagger_{n_2} e_{n_3} e_{n_4} +
+%\\ \nonumber
+\frac{1}{2}\sum_{\substack{m_1,m_2\\m_3,m_4}} V_{\substack{m_1,m_2\\m_3,m_4}}^{(hh)}
+h^\dagger_{m_1} h^\dagger_{m_2} h_{m_3} h_{m_4} +
+%\\ \nonumber
+\frac{1}{2}\sum_{\substack{m_1,n_2\\n_3,m_4}} V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}
+h^\dagger_{m_1} e^\dagger_{n_2} e_{n_3} h_{m_4} ,
+\end{eqnarray}
+where $\epsilon_n$ and $\bar\epsilon_m$ are the SP energies for the SP
+electron state $n$ and hole state $m$, respectively.  The subscripts
+$n$ and $m$ run on the SP states included in the calculation, for
+electrons and holes: $S$ and $\bar S$, respectively.  So $n=1\dots S$
+and $m=1\dots \bar S$.  The annihilation and creation operators $e_n$
+and $e^\dagger_n$ act on the SP electron state $n$. The operators
+$h_m$ and $h^\dagger_m$ act on the SP hole state $m$.
+
+\
+
+The interaction elements $V_{\substack{n_1,n_2\\n_3,n_4}}^{(ee)}$,
+$V_{\substack{m_1,m_2\\m_3,m_4}}^{(hh)}$ and
+$V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}$ are an input of \CItool and
+are obtained from the SP eigenstates, usually from their real-space
+representation, or from the real-space representation of a component
+of the SP state.
+
+The SP states are obtained by solving the SP Schr\"odinger equations
+\begin{eqnarray}
+H_{SP}^{(e)} |\phi_n\rangle &=& \epsilon_n |\phi_n\rangle \\
+H_{SP}^{(h)} |\bar\phi_m\rangle &=& \bar\epsilon_m |\bar\phi_m\rangle.
+\end{eqnarray}
+
+If the form of the interaction $V$ and SP Hamiltonians are known in a
+given representation, say $|x\rangle$,
+then the interaction elements can be obtained from
+\begin{eqnarray}
+V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}&=&
+\langle\bar\phi_{m_1} \phi_{n_2}| V |\phi_{n_3} \bar\phi_{m_4}\rangle =
+\\
+&=&\sum_x \sum_{x'} \langle\bar\phi_{m_1}|x\rangle \langle\phi_{n_2}|x'\rangle
+V_{x,x'}^{(he)} \langle x'|\phi_{n_3}\rangle \langle x|\bar\phi_{m_4}\rangle .
+\end{eqnarray}
+Similarly for $(ee)$ and $(hh)$.  Here the interaction $V_{x,x'}$ has
+two indexes alone since it is diagonal on $|x,x'\rangle$.  In case the
+interaction is the electrostatic one, the above expression gives the
+\emph{Coulomb elements}. Note that $x$ is a cumulative
+index containing all the coordinates of the representation, as
+real-space position, spin, etc.
+
+\
+
+Let us suppose now that the SP states can be factorized into two
+components (same for holes),
+\begin{equation} \label{eq:phifactorize}
+\langle x|\phi_n\rangle=\langle{\bf r}|\psi_{p(n)}\rangle
+\langle q'|\omega_{q(n)}\rangle ,
+\end{equation}
+with $|x\rangle=|{\bf r}\rangle |q'\rangle$, and that the SP
+Hamiltonian is separable into the two corresponding hamiltonians
+depending on ${\bf r}$ and $q'$, respectively.  For simplicity we use
+a specific example, with the first component only depending on the
+real-space coordinates, and the second component that does not need to
+be computed explicitely in a different representation (e.g. spin
+states). The latter means that we use the representation $q'$ with the
+basis consisting of the vectors $|\omega_{q}\rangle$ themself.  As a
+consequence, $\langle q'|\omega_{q(n)}\rangle = \delta(q'-q)$. In
+other words, the above value is a function of $q'$ ($q$ is fixed by
+$n$) different from zero only when $q'=q$.
+
+In this case, the Coulomb elements (with an interaction depending on
+${\bf r}$ alone) are given by
+\begin{eqnarray}
+V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}&=&
+\langle\bar\psi_{\bar p(m_1)} \psi_{p(n_2)}| V^{(he)}_{{\bf r}-{\bf r'}} 
+|\psi_{p(n_3)} \bar\psi_{\bar p(m_4)}\rangle \,
+\langle\bar\omega_{\bar q(m_1)} \omega_{q(n_2)} |
+\omega_{q(n_3)} \bar\omega_{\bar q(m_4)}\rangle
+\\
+&=&\int d{\bf r} \int d{\bf r'} \, \bar\psi^*_{\bar p(m_1)}({\bf r}) 
+\psi^*_{p(n_2)}({\bf r'}) V^{(he)}({\bf r}-{\bf r'}) 
+\psi_{p(n_3)}({\bf r'}) \bar\psi_{\bar p(m_4)}({\bf r})
+\\  \nonumber
+&& \delta\left[\bar q(m_1)-\bar q(m_4)\right] \, \delta\left[q(n_2)-q(n_3)\right] ,
+\end{eqnarray}
+where each of the indexes $p, \bar p, q, \bar q$ can represent a whole
+set of quantum numbers.  Since the interaction operator $V$ is
+independent from $q$, the $\delta$'s have appeared.  Note that
+$p=p(n)$ and $q=q(n)$, as can be gathered from
+Eq.~(\ref{eq:phifactorize}), i.e. a single value of $p$ or $q$ is
+determined by a value of $n$ but the opposite does not hold. That is,
+you can have the same wave function $\psi_p$ for different values of
+$n$.
+
+\
+
+Usually, you solve the SP real-space Schr\"odinger equations
+\begin{eqnarray}
+H_{SP}^{(e)}({\bf r}) \psi_j({\bf r}) 
+&=& f_j \psi_j({\bf r}) \\
+H_{SP}^{(h)}({\bf r}) \bar\psi_i({\bf r})
+&=& \bar f_i \bar\psi_i({\bf r})
+\end{eqnarray}
+and obtain a set (or two sets, considering holes) of wave functions
+and energies. Note that the energies $f_j$ are never used alone,
+rather they are included in the SP-state energy $\epsilon_n$, possibly
+including the $|\omega_q\rangle$ contribution (e.g. spin splitting).
+Let us call $R$ and $\bar R$ the number of SP wave functions $\psi_j$
+used in the calculation: $j=1\dots R$ and $i=1\dots \bar R$.
+
+The \emph{Coulomb Integrals} are
+\begin{eqnarray}
+U_{\substack{ij\\kl}}^{(he)}&=&
+\int d{\bf r} \int d{\bf r'} \, \bar\psi^*_{i}({\bf r}) 
+\psi^*_{j}({\bf r'}) \ {\cal U}^{(he)}({\bf r}-{\bf r'}) \
+\psi_{k}({\bf r'}) \bar\psi_{l}({\bf r}) ,
+\end{eqnarray}
+where the specific form of the Coulomb interaction ${\cal U}$ has been
+used in place of the generic $V$. The Coulomb elements must be obtained from
+\begin{eqnarray}
+V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}&=&
+U_{\substack{p(m_1) p(n_2)\\p(n_3) p(m_4)}}^{(he)} \
+\delta\left[\bar q(m_1)-\bar q(m_4)\right] \, \delta\left[q(n_2)-q(n_3)\right] \ ,
+\end{eqnarray}
+
+\
+
+Fed with the SP states and interaction elements, \CItool computes the
+multi-particle states of $N^{(e)}$ electrons and $N^{(h)}$ holes as a linear
+combination of Slater determinants
+\begin{equation} \label{Psi1}
+|\Psi_n\rangle = \sum_{l_e}\sum_{l_h} C^n_{l_e,l_h}  |\Phi^{(e)}_{l_e}\rangle
+|\Phi^{(h)}_{l_h}\rangle ,
+\end{equation}
+where $|\Psi_n\rangle$ is the $n$-th multi-particle state, $|\Phi^{(e)}_{l_e}\rangle$
+and $|\Phi^{(h)}_{l_h}\rangle$ are the Slater determinants for electrons and
+holes, with $l_e= 1..L_e$ and $l_h= 1..L_h$, respectively.
+
+We rewrite the above formula with a single sum, 
+in order to represent the basis vector of the Hilber space with a single ket
+\begin{equation} \label{Psi2}
+|\Psi_n\rangle = \sum_{l=1}^L  C^n_l  |\Phi_l \rangle ,
+\end{equation}
+where $L$ is the dimension of the Hilbert space, i.e. the number of
+double (electron + hole) Slater determinants considered.
+Here, $|\Phi_l \rangle = |\Phi^{(e)}_{l_e}\rangle |\Phi^{(h)}_{l_h}\rangle$,
+with $l_e$ and $l_h$ fixed by $l$.
+
+The coefficients $C^n_l$ are the output of \CItool
+
+\
+
+In order to represent the electron (same for holes) density
+distribution of a multi-particle state, we consider the 
+number-density operator in a coordinate point $x$
+\begin{equation} \label{numberdensity}
+\hat n^{(e)}(x) = 
+\sum_{s, s' =1}^S \phi^*_{s'}(x) \phi_{s}(x) \, e^\dagger_{s'} e_{s} ,
+\end{equation}
+where $\phi_{s}(x)$ is a SP state and
+$e_s$ ($e^\dagger_s$) the annihilation (creation) operator
+of an electron in that state. $S$ is the number of single-particle
+electron states.
+
+In order to obtain the electron number-density in $x$
+for the state $\Psi_n$, we must compute the expectation value 
+(the symbol $n^{(e)}$ is used for
+this real-valued function)
+\begin{eqnarray} \label{nx}
+n^{(e)}(x)=
+\langle \Psi_n | \hat n^{(e)}(x) | \Psi_n \rangle 
+&=& 
+\left[  \sum_{l'=1}^L  (C^n_{l'})^*  \langle\Phi_{l'} | \right]
+ \sum_{s, s' = 1}^S \phi^*_{s'}(x) \phi_{s}(x) e^\dagger_{s'} e_{s}
+\left[  \sum_{l=1}^L  C^n_l  |\Phi_l\rangle \right ]     \nonumber
+\\
+&=& 
+\sum_{l, l' = 1}^L \ \sum_{s, s' = 1}^S 
+\left[ (C^n_{l'})^* C^n_l \phi^*_{s'}(x) \phi_{s}(x)
+\langle\Phi^{(h)}_{l'_h}| \langle\Phi^{(e)}_{l'_e}|
+e^\dagger_{s'} e_{s} 
+|\Phi^{(e)}_{l_e}\rangle |\Phi^{(h)}_{l_h}\rangle 
+ \right ]    \nonumber
+\\
+&=& 
+\sum_{l, l' = 1}^L  \left[ 
+(C^n_{l'})^* C^n_l \, \delta[l_h'-l_h] \sum_{s, s' = 1}^S 
+\phi^*_{s'}(x) \phi_{s}(x)
+\langle\Phi^{(e)}_{l'_e}| e^\dagger_{s'} e_{s} 
+|\Phi^{(e)}_{l_e}\rangle  \right ] ,   \nonumber
+\end{eqnarray}
+where, $l_e={l_e(l)}$ and $l_h={l_h(l)}$ and $\delta$ is a Kronecker
+delta coming from the orthogonality of the hole Slater determinants.
+In the above derivation, $x$ represent a full set of coordinates for
+the SP state.
+
+\
+
+If one is interested in the density for a subset of coordinates,
+like ${\bf r}$ --see Eq.~(\ref{eq:phifactorize})-- the number-density
+operator is
+\begin{eqnarray} \label{numberdensityop_r}
+\hat n^{(e)}({\bf r}) &=& \sum_{q'} n^{(e)}({\bf r},q') = 
+\sum_{q'} \sum_{s, s' =1}^S \psi^*_{p(s')}({\bf r}) \psi_{p(s)}({\bf r}) 
+\, \omega^*_{q(s')}(q') \omega_{q(s)}(q')  \, 
+e^\dagger_{s'} e_{s} 
+\\  \nonumber
+&=& \sum_{s, s' =1}^S \psi^*_{p(s')}({\bf r}) \psi_{p(s)}({\bf r}) 
+\, \delta[q(s')-q(s)]  \, 
+e^\dagger_{s'} e_{s} \, .
+\end{eqnarray}
+
+Now one can compute the real-space density
+\begin{eqnarray} \label{numberdensity_r}
+n^{(e)}({\bf r}) &=&\langle \Psi_n | 
+\left[ \sum_{s, s' =1}^S \psi^*_{p(s')}({\bf r}) \psi_{p(s)}({\bf r}) 
+\, \delta[q(s')-q(s)]  \, e^\dagger_{s'} e_{s} \right] | \Psi_n \rangle
+\\  \nonumber
+&=&  \sum_{l, l' = 1}^L  \left[ 
+(C^n_{l'})^* C^n_l \, \delta[l_h'-l_h] \sum_{s, s' = 1}^S 
+\psi^*_{p(s')}({\bf r}) \psi_{p(s)}({\bf r}) 
+\, \delta[q(s')-q(s)]
+\langle\Phi^{(e)}_{l'_e}| e^\dagger_{s'} e_{s} 
+|\Phi^{(e)}_{l_e}\rangle  \right ] .
+\end{eqnarray}
+
+\vspace{4mm}
+\begin{center}
+\rule{0.8\textwidth}{1pt}
+\end{center}
+\vspace{4mm}
+
+In the following, the input/output files for the software suite will
+be described.  The configuration-interaction code \CItool, the density
+code, the single-particle code and the Coulomb integral code will be
+considered althouh the last two programs are not part of \CItool
+distribution: they are needed in order to prepare \CItool input files.
+
+Empty circles $\circ$ indicate files not directly used by
+\CItool or by the density code (part of the \CItool distribution),
+while bullets $\bullet$ indicate files used/produced by the \CItool
+codes. \textsf{(ASC)} are ``formatted'' plain text files, \textsf{(BIN)} 
+are ``unformatted Fortran binary files.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection*{Single-particle states}
+
+This is the code that computes the SP wave functions $\psi_j({\bf r})$
+and writes the SP states (in terms of quantum numbers) and energies:
+$\phi_n$ and $\epsilon_n$.  It is not part of \CItool. We will use
+\textsf{stic2Dhexagon} as an example. It has the following i/o files.
+
+$\circ$ \ \textsf{INPUT (ASC) : stic2Dhexagon.nml} \\
+It is the namelist describing the physical structure and its
+discretization via a real-space mesh.  Its name is hard-coded.  It can
+indicate additional \textsf{INPUT} files describing the structure
+itself, as the material profile.
+\\
+$\circ$ \ \textsf{OUTPUT (BIN) : psi\_e.bin} \\ It is the
+``unformatted'' file containing the SP electron wave functions
+$\psi_j({\bf r})$.  A similar or the same code is needed for holes,
+producing \textsf{OUTPUT (BIN) : psi\_h.bin}.  Since it is not used by
+\CItool and, it is highly dependent on the physical problem
+and on the mesh, its format is not defined.  In fact, it is used by
+the Coulomb-elements code (also not part of \CItool) and by
+the Density code, through the user-developed module
+\verb#mod_inoutrs.f90# (see later).  In general, it should contain
+infos on the mesh and the real-space wave functions 
+$\psi_1, \psi_2, \dots \psi_S$. 
+\\
+As an example, \textsf{stic2Dhexagon} writes it with the code reported on
+Table~\ref{tab:wrstic2Dhex}.
+
+\begin{table}
+\begin{alltt}
+\ \\
+INTEGER :: numh, numev
+REAL*8 :: dh
+REAL*8, ALLOCATABLE :: psi(:,:,:)
+ALLOCATE(psi(-numh:numh, -numh:numh, numev))
+\( \dots \)
+OPEN(32, FILE=fileoutBIN_psi_e, FORM="UNFORMATTED")
+WRITE(32) numh, numev, dh
+WRITE(32) psi
+\end{alltt}
+\caption{Scrap of SP-states code for writing \textsf{psi\_e.bin}.
+The variables \textsf{numh, numev, dh} are: number of grid points in a certain direction,
+number of SP eigenfunctions included, distance between two grid ponts (or something
+similar, since here we have an hexagonal mesh).
+} 
+\label{tab:wrstic2Dhex}
+\end{table}
+
+
+$\bullet$ \textsf{OUTPUT (ASC) : spstates.dat} 
+\\ 
+It contains the description -- in terms of quantum numbers (QN) -- and
+the energies $\epsilon_n$ of the SP states $|\phi_n\rangle$.  For
+electrons it has the following format (Table~\ref{tab:spstateswithplus}
+shows an example with the whole file and with spaces substituted by
+\textsf{+} signs.)
+\begin{verbatim}
+ E
+          24           2
+NAME:         rank        spin
+TYPE:          psi         ext
+   1             1           0  0.942294659338679
+   2             2           0  0.942558787377977
+ ...
+\end{verbatim}
+%\vspace{4 mm}
+
+
+\begin{table}
+\begin{alltt}
+\ \\
++E 
+++++++++++24+++++++++++2 
+NAME:+++++++++rank++++++++spin
+TYPE:++++++++++psi+++++++++ext
++++1+++++++++++++1+++++++++++0++0.942294659338679
++++2+++++++++++++2+++++++++++0++0.942558787377977
++++3+++++++++++++3+++++++++++0++0.942558787377981
++++4+++++++++++++4+++++++++++0++0.943290473090732
++++5+++++++++++++5+++++++++++0++0.943290473090738
++++6+++++++++++++6+++++++++++0++0.943933118334573
++++7+++++++++++++7+++++++++++0++0.946407009705940
++++8+++++++++++++8+++++++++++0++0.947625130416417
++++9+++++++++++++9+++++++++++0++0.947625130416417
+++10++++++++++++10+++++++++++0++0.950050742466169
+++11++++++++++++11+++++++++++0++0.950050742466169
+++12++++++++++++12+++++++++++0++0.952342721210452
+++13+++++++++++++1+++++++++++1++0.942294659338679
+++14+++++++++++++2+++++++++++1++0.942558787377977
+++15+++++++++++++3+++++++++++1++0.942558787377981
+++16+++++++++++++4+++++++++++1++0.943290473090732
+++17+++++++++++++5+++++++++++1++0.943290473090738
+++18+++++++++++++6+++++++++++1++0.943933118334573
+++19+++++++++++++7+++++++++++1++0.946407009705940
+++20+++++++++++++8+++++++++++1++0.947625130416417
+++21+++++++++++++9+++++++++++1++0.947625130416417
+++22++++++++++++10+++++++++++1++0.950050742466169
+++23++++++++++++11+++++++++++1++0.950050742466169
+++24++++++++++++12+++++++++++1++0.952342721210452
+\end{alltt}
+\caption{Example of the file \textsf{spstates.dat} with spaces
+sustituted by \textsf{+} signs} 
+\label{tab:spstateswithplus}
+\end{table}
+
+
+The first character indicates the type of particles (\textsf{E} or
+\textsf{e} for electrons, \textsf{H} or \textsf{h} for holes).  In the
+second line, the first number is the number of SP states
+$|\phi_n\rangle$, namely $S$, and the second is the number of QNs used
+to label them. In the third line, after the string 
+``\textsf{NAME: }'', the names of the QNs are reported, with a max length of 12
+characters.  In the following line, the type of QNs is reported.  Both
+name and type refer to the QNs in the same column.  The type can be \\
+\textsf{psi} : the QN labels the $\psi_j$ wave functions, i.e. it is the index $j$; \\
+\textsf{ext} : the QN labels the $\omega_q$ component, i.e. it is the index $q$; \\
+\textsf{int} : the QN is already inside $\psi_j$, i.e. it represents a QN that can be
+gathered from $\psi_j({\bf r})$ -- this QN is only used as a label to
+possibly limit the $\psi_j$ set. \\ The following lines contain, in
+order, the index $n$ of $|\phi_n\rangle$, the values of the QNs named
+above and the energy of the SP-state $\epsilon_n$.  Note that the
+energy can be expressed in any unit (e.g. eV, Joule, Hartree), however
+it must be consistent with the unit of the interaction elements. The
+resulting energies of the MP states, produced by \CItool, will be in
+the same unit.
+\\
+The file \textsf{spstates.dat} is written with the code reported on Table~\ref{tab:wrspstates}.
+
+\begin{table}
+\begin{alltt}
+\ \\
+WRITE(32,*) "E"
+WRITE(32,*) 2*numev, 2
+! name of quantum numbers (CHANGE THE FORMAT TO nA12 FOR n QN)
+WRITE(32,"(A6,2A12)") "NAME: ", "rank", "spin"
+! type of quantum numbers (CHANGE THE FORMAT TO nA12 FOR n QN)
+WRITE(32,"(A6,2A12)") "TYPE: ", "psi",  "ext"
+! SP quantum numbers and energy (in eV !) for each state
+DO ne= 1, numev
+  WRITE(32,"(I4,XX)",ADVANCE="NO") ne
+  WRITE(32,"(2I12)",ADVANCE="NO") ne, 0
+  WRITE(32,*) energy(ne) - spinenergysplit/2  ! in eV
+END DO
+DO ne= 1, numev
+  WRITE(32,"(I4,XX)",ADVANCE="NO") ne+numev
+  WRITE(32,"(2I12)",ADVANCE="NO") ne, 1
+  WRITE(32,*) energy(ne) + spinenergysplit/2  ! in eV
+END DO
+\end{alltt}
+\caption{Scrap of SP-states code for writing \textsf{spstates.dat}.}
+\label{tab:wrspstates}
+\end{table}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Coulomb elements}
+This code computes the Coulomb elements
+$V_{\substack{n_1,n_2\\n_3,n_4}}^{(ee)}$
+$V_{\substack{m_1,m_2\\m_3,m_4}}^{(hh)}$ and
+$V_{\substack{m_1,n_2\\n_3,m_4}}^{(he)}$ from the $\psi_j$ wave
+functions computed by the previous code.  It is not part of
+\CItool. We will use \textsf{coulombel} for an hexagonal
+grid as an example. It has the following i/o files.
+\\
+$\circ$ \ \textsf{INPUT (ASC) : coulombel.nml} \\ It is the namelist
+with some infos on the SP wave functions and on the physical system
+Its name is hard-coded.  It also indicates the name of
+the other \textsf{INPUT/OUTPUT} files.
+\\
+$\bullet$ \ \textsf{OUTPUT (ASC) : Vee.dat ~ Vhh.dat ~ Vhe.dat} \\
+These files contain the Coulomb elements for electron-electron,
+hole-hole, hole-electron interactions, needed by \CItool.  Be careful
+to put in them the Coulomb elements
+$V_{\substack{n_1,n_2\\n_3,n_4}}^{(ee)}$ and not the Coulomb integrals
+$U_{\substack{ij\\kl}}^{(ee)}$. This will be changed in a future version.
+These files have the following structure:
+\begin{verbatim}
+       12944
+   1   2     1   2     2.438049847439864E-003
+   1   2     1  10     9.859311940431132E-005
+   1   2     1  11    -2.040113596402228E-004
+ ...
+\end{verbatim}
+\vspace{2 mm}
+with the first number indicating how many Coulomb elements are
+available in the file, and the following lines containing the four
+indexes and the value (energy-like) of the interaction element.
+Specifically, the four integers in each line are $n_1$, $n_2$, $n_3$
+and $n_4$, in this very same order.  In the code \textsf{coulombel},
+the file \textsf{Vee.dat} is written with the code reported on
+Table~\ref{tab:wrvee}
+
+\begin{table}
+\begin{alltt}
+\ \\
+TYPE ci_type_real8
+  INTEGER*1  ::  n1, n2, n3, n4
+  REAL*8 ::  v
+END TYPE ci_type_real8
+TYPE( ci_type_real8 ), ALLOCATABLE :: ce_ee(:)
+ALLOCATE(ce_ee(numce_ee))
+ ...
+WRITE(21,*) numce_ee
+DO nn= 1, numce_ee
+  WRITE(21,"(1X,2(I3,1X),2X,2(I3,1X),2X)",ADVANCE="NO")   &
+       &  ce_ee(nn)\%n1, ce_ee(nn)\%n2, ce_ee(nn)\%n3, ce_ee(nn)\%n4
+  WRITE(21,*)  ce_ee(nn)%v
+END DO
+\end{alltt}
+\caption{Scrap of Coulomb-elements code for writing \textsf{Vee.dat}.}
+\label{tab:wrvee}
+\end{table}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection*{\CItool}
+%
+The full-configuration-interaction solver.  Using the SP-states
+energies and interaction elements it computes the correlated
+multi-particle (MP) state of $N+\bar N$ electrons and holes on the basis of
+Slater determinants.  It has the following i/o files.
+
+$\bullet$ \ \textsf{INPUT (ASC) : citool.nml} \\
+Namelist indicating the number of electrons and holes, the
+number of SP states (must match with $S$ and $\bar S$ used in
+the previous calculations), the names of in/out files.
+An example is reported in Table~\ref{tab:citoolnml} and a brief
+explanation of the keywords is reported in Table~\ref{tab:citoolnmlkey}.
+
+\begin{table}
+\begin{alltt}
+\ \\
+ &indata_singleparticle
+                 numspstates_e= 24 ,
+                 numspstates_h= 0            /
+
+ &indata_multiparticle
+                 num_e= 3 ,
+                 num_h= 0 ,
+                 nummpenergies= 6 ,
+                 nummpstates= 6 ,
+                 complexrun= .FALSE.              /
+
+
+ &indata_inoutput
+                 citoolnml_version= "0.9" ,
+                 filein_spstates_e= "spstates.dat" ,
+                 filein_spstates_h= "input_1h.dat" ,
+                 fileinformat_coulomb= "dat real8" ,
+                 filein_coulomb_ee= "Vee.dat" ,
+                 filein_coulomb_hh= "Vhh.dat" ,
+                 filein_coulomb_eh= "Veh.dat" ,
+                 filein_hconstrains_e = "constrains_e.dat" ,
+                 fileoutBIN_hspace= "hspace.bin" ,
+                 fileoutASC_hspace= "hspace.txt" ,
+                 fileoutBIN_mpstates= "mpstates.bin" ,
+                 cutoff_fileoutBIN_mpstates = 0. ,
+                 fileoutASC_mpstates= "mpstates.txt" ,
+                 cutoff_fileoutASC_mpstates = 1e-6 ,
+                 loglevel= 0 ,
+                 statusfile= "status.txt",
+                 runname= "test20dec10.2"             /
+\end{alltt}
+\caption{Example of the file namelist \textsf{citool.nml}.} 
+\label{tab:citoolnml}
+\end{table}
+
+\begin{table}
+\begin{tabular}{r|l}
+\verb#numspstates_e# & number of electrons SP states $S$ \\
+\verb#numspstates_h# & number of holes SP states $\bar S$ \\
+\verb#num_e# & number of electrons \\
+\verb#num_h# & number of holes \\
+\verb#nummpenergies# & number of multi-particle energy levels to be computed \\
+\verb#nummpstates# & number of multi-particle states to be computed \\ % ($\leq$ \verb#nummpenergies#) \\
+\verb#complexrun# & are the interaction elements complex ? \\
+\verb#citoolnml_version# & version of this nml: must match the code version \\
+\verb#filein_spstates_e# & name of file with SP states for electrons \\
+\verb#filein_spstates_h# & name of file with SP states for holes \\
+\verb#fileinformat_coulomb# & format of file with interaction elements - it contains: \\
+& \begin{tabular}{l l }
+  \verb#dat|cit# & for ascii or CItool binary format \\
+  \verb#real8|complex16# & for real or complex double prec.
+  \end{tabular}
+  \\
+\verb#filein_coulomb_ee# & name of file with the ee interaction elements \\
+\verb#filein_coulomb_hh# & name of file with the hh interaction elements \\
+\verb#filein_coulomb_eh# & name of file with the eh interaction elements \\
+\verb#filein_hconstrains_e# & name of file with description of constrains \\
+\verb#fileoutBIN_hspace# & unformatted file with the Hilbert space (Slater dets) \\
+\verb#fileoutASC_hspace# & formatted file with the Hilbert space \\
+\verb#fileoutBIN_mpstates# & unformatted file with the resulting multi-particle states \\
+\verb#cutoff_fileoutBIN_mpstates# & -- not implemented: must be 0 -- \\
+\verb#fileoutASC_mpstates# & formatted file with the resulting multi-particle states \\
+\verb#cutoff_fileoutASC_mpstates# & only Slater dets weight$\geq$cutoff are included in file\\
+\verb#loglevel# & level of infos in statusfile: with 0 maximum info\\
+\verb#statusfile# & name of logfile \\
+\verb#runname# & name of this run: is included in the output files \\
+\end{tabular}
+\caption{Keywords in \textsf{citool.nml} file for \CItool version 0.91}
+\label{tab:citoolnmlkey}
+\end{table}
+
+$\bullet$ \textsf{INPUT (ASC) : spstates.dat} 
+\\ 
+See above.
+
+$\bullet$ \ \textsf{INPUT (ASC) : Vee.dat ~ Vhh.dat ~ Vhe.dat}
+\\
+See above.
+
+$\bullet$ \verb#INPUT (ASC) : constrains_e.dat#
+\\
+It is the optional file describing constrains on the Hilbert space
+according sums of SP quantum numbers.  Its name is given in
+\textsf{citool.nml} via the \verb#filein_hconstrains_e# string.  Only
+available for electrons at the moment.  In this file, you specify a
+number of subsets of the total Hilbert space, each containing a
+rescticted number of Slater determinants. The Slater determinants
+included in each subset are determined by the \emph{sum} of SP quantum
+numbers.  The Hilbert subspaces of different constrains can overlap
+and do not need to fully cover the total Hilbert space.
+
+The constrains file has the following structure:
+\begin{verbatim}
+ E
+           2           2
+NAME:         rank        spin
+TYPE:          psi         ext
+   1             *           *           *           *
+   2             *           0           3           3
+ ...
+\end{verbatim}
+\vspace{2 mm}
+that is similar to \textsf{spstates.dat} except for the energy column,
+not present here, and two extra 12-position columns with two integers
+(without \verb#NAME# or \verb#TYPE# entry).
+Starting from scratch, one can take the \textsf{spstates.dat} file and
+use it as a template, removing the energies and introducing the two
+extra integers.  The first character, ``\textsf{E}'' or
+``\textsf{H}'', indicates if the following constrains are on the
+electron or hole quantum numbers, respectively.  The two integers in
+the second line are the number of constrains and the number of quantum
+numbers.  Note that constrains in excess to the first number will not
+be considered.  The number of quantum numbers must match the one in
+\textsf{spstates.dat}.  In the third and fourth line the name and type
+of quantum numbers are reported (see the description of
+\textsf{spstates.dat} above).  In the following lines the constrains
+are described, with the character ``\verb#*#'' meaning ``any''. Let
+us consider a single constrains line. If a number is present in a
+field corresponding to a given quantum number, then the Slater
+determinants that will be included in the basis need to have populated
+SP states such that the sum of the specific quantum number matches the
+given value.  Let us take, as an example, the constraints 2 reported
+above.  While no condition is present for the \textsf{rank} quantum
+number (\verb#*#= any), only Slater determinants where the sum of
+\textsf{spin} quantum numbers of occupied SP states is 0 are included
+in the basis.  This correspond to fix the total spin as far as the
+interaction is spin independent. Be carefull that this is true only
+with total quantum numbers that are the sum of SP quantum numbers.
+Also note that the number 0 in the spin constrain does not mean total
+S=0, rather the total S you are imposing depends on how you codified
+the spin quantum number in \textsf{spstates.dat}. For example, if you
+decided spin-up=1 and spin-down=0 (as in
+Table~\ref{tab:spstateswithplus}), then a constrain with spin value 0
+(as in the above example) means that the sum of SP spins must be zero,
+i.e. only electrons with spin down are allowed in a Slater
+determinants for this constrain. In general, the constrain is
+dependent on the number of particles. For example, with a constrain
+spin value 1 and a run with two electrons, you are imposing that
+Slater determinants must have one spin-up and one spin-down electron,
+while in a run with five electrons you vill have one spin-up and four
+spin-down electrons. Again, this depends on the SP quantum number
+codification.
+
+The two last integers in a constrain line, after the requested sum of
+SP quantum numbers, indicate how many multi-particle eigenenergies and
+aigenstates must be computed for that constrain. The maximum numbers
+allowed are \textsf{nummpenergies} and \textsf{nummpstates} specified
+in \textsf{citool.nml}. The above values are also the default, used
+to replace \verb#*#. So, in the first constrain of the example above,
+\textsf{nummpenergies} eigenvalues and \textsf{nummpstates} eigenvectors
+will be computed, while in the second constrain, 3 eigenvalues and
+3 eigenvectors will be computed.
+
+If no \verb#filein_hconstrains_e# is specified in \textsf{citool.nml},
+no constrain is impesed, and the full Hilbert space of every possible
+Slater determinant is used. This is equivalent to have a constrain
+with \verb#*# in all fields.
+
+The file \verb#constrains_e.dat# is read by \CItool with a code like
+the one reported on Table~\ref{tab:readconstrains}.
+
+\begin{table}
+\begin{alltt}
+\ \\
+INTEGER, ALLOCATABLE :: hcons(:,:)
+CHARACTER(LEN=12) :: namespqn, typespqn, cons
+READ(31,*) partype
+READ(31,*) numhcons, numspqn
+ALLOCATE(hcons(numhcons,numspqn+2))
+READ(31,"(A6)",ADVANCE="NO") string6
+IF (string6/="NAME: " .AND. string6/="name: ") STOP "error"
+DO nqn= 1, numspqn
+  READ(31,"(A12)",ADVANCE="NO") namespqn
+END DO
+READ(31,*)
+READ(31,"(A6)",ADVANCE="NO") string6
+IF (string6/="TYPE: " .AND. string6/="type: ") STOP "error"
+DO nqn= 1, numspqn
+  READ(31,"(A12)",ADVANCE="NO") typespqn
+END DO
+READ(31,*)
+DO nc= 1, numhcons
+  READ(31,"(I4,XX)",ADVANCE="NO") nc
+  DO nqn= 1, numspqn + 2
+    READ(31,"(A12)",ADVANCE="NO") cons
+    IF (TRIM(ADJUSTL(cons)) /= "*") THEN
+      READ(cons,*) hcons(nc,nqn)
+    END IF        
+  END DO
+  READ(31,*)
+END DO
+\end{alltt}
+\caption{Scrap of \CItool code for reading the constrains file \textsf{constrains\_e.dat}.}
+\label{tab:readconstrains}
+\end{table}
+
+
+$\bullet$ \verb#OUTPUT (BIN) : hspace.bin#
+\\
+Contains the Hilbert space (or spaces, if more constrains are used) on
+which the multi-particle states are calculated and represented.  Each
+basis vector is a couple of Slater determinants (one for electron
+states and one for hole states), each encoded in a 68-bit
+(i.e. Fortran INTEGER*8) integer. The internal structure of this
+unformatted file can be guessed from the code in
+Table~\ref{tab:hspacebin}. This file is needed by the density code,
+and, in general, to interpret the unformatted file with the
+multi-particle states since it does not contain the basis.
+
+\begin{table}
+\begin{alltt}
+\ \\
+CHARACTER(80), PARAMETER :: citool_version= "0.9"
+CHARACTER(80) :: runname = "citoolrun"
+INTEGER, ALLOCATABLE :: blockstart(:)
+INTEGER*8, ALLOCATABLE :: ket(:,2)
+OPEN(22, FILE=TRIM(fileoutBIN_hspace), ACTION="WRITE", FORM="UNFORMATTED")
+WRITE(22) citool_version
+WRITE(22) runname
+WRITE(22) dimhspace_e, dimhspace_h
+WRITE(22) numhcons_e, numhcons_h
+DO ncons_e= 1, numhcons_e
+DO ncons_h= 1, numhcons_h
+  WRITE(22) ncons_e, ncons_h
+  WRITE(22) dimhspacecons
+  WRITE(22) numblock
+  WRITE(22) blockstart(1:numblock+1)
+  WRITE(22) ket
+END DO
+END DO
+\end{alltt}
+\caption{Scrap of \CItool code for writing the unformatted Hilbert
+space file \textsf{hspace.bin}.}
+\label{tab:hspacebin}
+\end{table}
+
+$\bullet$ \verb#OUTPUT (ASC) : hspace.txt#
+\\
+Same as above, in plain text.
+
+$\bullet$ \verb#OUTPUT (BIN) : mpstates.bin#
+\\
+Contains the result, i.e. the multi-particle states expressed in terms
+of the coefficients $C^n_l$ of Eq.~\ref{Psi2}.  Each coefficient is a
+REAL*8 (or COMPLEX*16 if \verb#complexrun= .TRUE.# in
+\textsf{citool.nml}). The internal structure of this
+unformatted file can be guessed from the code in
+Table~\ref{tab:mpstatesbin}.  This file is needed by the density code,
+together with the file with the basis \textsf{hspace.bin}.
+
+\begin{table}
+\begin{alltt}
+\ \\
+CHARACTER(80), PARAMETER :: citool_version= "0.9"
+CHARACTER(80) :: runname = "citoolrun"
+REAL*8, ALLOCATABLE :: mpstates(:,:)
+REAL*8, ALLOCATABLE :: mpenergies(:,:)
+OPEN(22, FILE=TRIM(fileoutBIN_mpstates), ACTION="WRITE", FORM="UNFORMATTED")
+WRITE(22) citool_version
+WRITE(22) runname
+WRITE(22) cutoff_fileoutBIN_mpstates
+WRITE(22) dimhspace_e, dimhspace_h
+WRITE(22) numhcons_e, numhcons_h
+DO ncons_e= 1, numhcons_e
+DO ncons_h= 1, numhcons_h
+  WRITE(22) ncons_e, ncons_h
+  WRITE(22) dimhspacecons
+  WRITE(22) numblock
+  WRITE(22) nummpenergiescons, nummpstatescons
+  DO nb= 1, numblock
+    WRITE(22) mpenergies
+    WRITE(22) blocknummpenergies
+    WRITE(22) mpstates_x
+    WRITE(22) blocknummpstates
+  END DO
+END DO
+END DO
+\end{alltt}
+\caption{Scrap of \CItool code for writing the unformatted 
+file \textsf{mpstates.bin}, with the computed multi-particle states.}
+\label{tab:mpstatesbin}
+\end{table}
+
+$\bullet$ \verb#OUTPUT (ASC) : mpstates.txt#
+\\
+Same as above, in plain text.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Particle density distribution}
+
+This is the code that computes the particle density
+as a function of a given coordinate set according Eq.~(\ref{numberdensity_r}).
+It is named \textsf{density4}\CItool and it is part of \CItool.
+
+It has the following i/o files:
+
+$\bullet$ \ \textsf{INPUT (ASC) : density4CItool.nml} \\
+Namelist with the description of the MP state(s) for which the
+density distribution will be computed and other infos.
+The name of this file is hard-coded.
+An example of this namelist is reported on Table~\ref{tab:density4CItoolnml} and
+a brief description of the variables is given on Table~\ref{tab:density4CItoolnmlkey}
+%
+\begin{table}
+\begin{alltt}
+\ \\
+ &indatadensity_wantmpstate
+                 want_cons= 1 ,
+                 want_energylevel= 3 ,
+                 want_block= 5, 5 ,
+                 want_rank=  1, 3              /
+
+ &indatadensity_inoutput
+                 density4citoolnml_version= "0.9" ,
+                 fileinBIN_psi_e= "psi_e.bin" ,
+                 fileinBIN_psi_h= "" ,
+                 filein_densdescription_e= "densdescription_e.dat" ,
+                 filein_densdescription_h= ""     /
+\end{alltt}
+\caption{Example of the file namelist \textsf{density4CItool.nml}.} 
+\label{tab:density4CItoolnml}
+\end{table}
+%
+\begin{table}
+\begin{tabular}{r|l}
+\verb#want_cons# & number of the constrain containinf the MP state(s) \\
+\verb#want_energylevel# & n. of the MP state (in increasing energy order) \\
+\verb#want_block# & if \verb#want_energylevel=0# this select one or more MP block \\
+\verb#want_rank#  & if \verb#want_energylevel=0# this select one or more MP rank \\
+\verb#density4citoolnml_version# & ver. of this file: should match \verb#citoolnml_version# \\
+\verb#fileinBIN_psi_e# & ``unformatted'' file with the electron SP wave functions \\
+\verb#fileinBIN_psi_h# & ``unformatted'' file with the hole SP wave functions \\
+\verb#filein_densdescription_e# & describes how many and which densities to compute \\
+\verb#filein_densdescription_h# & same, for holes
+\end{tabular}
+\caption{Keywords in \textsf{density4citool.nml} file for \CItool version 0.91}
+\label{tab:density4CItoolnmlkey}
+\end{table}
+
+In order to decide the density of which MP(s) you want, you first need to
+set the specific constrain (see the \CItool section) containing the MP state.
+If the run was performed without explicit constrains, put \verb#want_cons=1#.
+then, you can choose the MP state either via its position in the increasing-energy
+list (the status file reports this list for the selected constrain) or via
+its block and rank number. In the first case put \verb#want_energylevel=1#
+for the ground state, \verb#want_energylevel=2# for the first-excited state, and so on.
+The following two variables will be ignored.
+In the second case, namely to choos the MP state(s) through its(their) block/rank, put 
+\verb#want_energylevel=0#. Then you can select one or more (up to 20) MP states by
+setting the \verb#want_block# and \verb#want_rank# variables. They are integers
+arrays, so you can put one or more (up to 20) integers values in the namelist.
+For example, on Table~\ref{tab:density4CItoolnml} two MP states are
+selected, namely (block,rank)= (5,1) and (5,5).
+Note that in order to meke this selection effective one should set \verb#want_energylevel=0#
+on Table~\ref{tab:density4CItoolnml}.
+When more than one MP state is selected, each calculated density will be the average
+of the density of each MP state.  So, in the example of Table~\ref{tab:density4CItoolnml},
+each density file (as listed in "densdescription\_e.dat", see below) would contain
+the sum of the density of the two MP states selected, divided by 2.
+
+
+$\bullet$ \ \textsf{INPUT (ASC) : citool.nml} \\ The code
+\textsf{density4}\CItool reads the same namleist of the
+configuration-interaction run. This file should be unaltered from the
+\CItool run that produced the results whose density will be computed.
+
+
+$\bullet$ \ \textsf{INPUT (ASC) : densitydescription\_e.dat} \\
+In this file you list the kind of electron densities you want, by possibly listing
+only specific values of SP quantum numbers and giving names to the output files.
+The file with the description of the densities has the following structure:
+\begin{verbatim}
+ E
+           3           2
+NAME:         rank        spin
+TYPE:          psi         ext
+   1             *           *        densTOTe.hdat
+   2             *           1        densUPe.hdat
+   3             *           0        densDNe.hdat
+\end{verbatim}
+\vspace{2 mm}
+that is similar to \textsf{spstates.dat} except for the energy (last) column,
+here substituted by a 80-character string, containing the file name of the
+density described bu the quantum numbers on the same line.
+The first four lines are read with a code similar to the first
+part of Table~\ref{tab:readconstrains}. The remaining lines, with the density
+descriptions, are read with the code sketched on Table~\ref{tab:readdensdesc}, where
+\textsf{numdensdesc} is the number of such lines.
+%
+\begin{table}
+\begin{alltt}
+\ \\
+INTEGER :: densdesc(numdensdesc,numspqn)
+CHARACTER(80) :: densfiles(numdensdesc)
+densdesc(:,:)= 9999
+DO nd= 1, numdensdesc
+  READ(31,"(I4,XX)",ADVANCE="NO") nd_read
+  IF ( nd_read /= nd )  STOP "DENSDESCRIPTION: densdesc wrong #"
+  DO nqn= 1, numspqn
+    READ(31,"(A12)",ADVANCE="NO") dede_read
+    IF (TRIM(ADJUSTL(dede_read)) /= "*") THEN
+      READ(dede_read,*) densdesc(nd,nqn)
+    END IF
+  END DO
+  READ(31,*) densfiles(nd)
+END DO
+\end{alltt}
+\caption{Scrap of \textsf{density4}\CItool code for reading the density-description
+file \textsf{densitydescription\_e.dat}.}
+\label{tab:readdensdesc}
+\end{table}
+
+In \textsf{densitydescription\_e.dat}, the character in the first line
+indicates the type of particles (\textsf{E} or \textsf{e} for electrons,
+\textsf{H} or \textsf{h} for holes).  In the
+second line, the first number is te number of desities to be computed,
+the second is the number of quantum numbers describing a SP state.
+The meaning of the third and fourth lines have been already described
+(see \textsf{spstates.dat}.  In the following lines you can describe
+the densities you are interested in.
+The first number is only an integer label, starting from 1 and increasing by one each line.
+then, in the integers describing the quantum number you can put $*$ in order to include
+all the SP states for this density (also in this case $*=$''any''), or you can specify
+a value. In the latter case only the SP states with that value for that particular
+quantum number will be considered. In the example of Table~\ref{tab:readdensdesc}
+the first description line computes the total electron density (i.e. with
+all the SP states included), and the following lines compute the spin-UP and
+spin-DOWN densities, respectively, since the spin quantum number is
+fixed to $1$ (UP) or $0$ (DOWN) so that only the proper SP states are used.
+
+
+
+$\bullet$ \verb#OUTPUT (ASC) : status.txt#
+\\
+The code \textsf{density4}\CItool uses the same log file of \CItool, whose
+name is read from \textsf{citool.nml}.
+
+
+$\bullet$ \verb#FORTRAN SOURCE (F90) : # \textsf{mod\_inoutrs.f90}
+\\
+This is not a true i/o file, but the used must provide it
+in order to 
+
+\end{document}

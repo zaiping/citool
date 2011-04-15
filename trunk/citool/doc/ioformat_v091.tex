@@ -292,6 +292,42 @@ n^{(e)}({\bf r}) &=&\langle \Psi_n |
 |\Phi^{(e)}_{l_e}\rangle  \right ] .
 \end{eqnarray}
 
+\
+
+The \emph{conditional density} is obtained along the same lines. \\
+The operator for two configuration-space points $x$ and $y$ is
+\begin{equation} \label{conditionaldensity}
+\hat n^{(ee)}(x,y) = 
+\sum_{s, s' =1}^S \sum_{t, t' =1}^S \phi^*_{s'}(x)  \phi^*_{t'}(y) \phi_{t}(y) \phi_{s}(x) \,
+e^\dagger_{s'} e^\dagger_{t'} e_{t} e_{s} ,
+\end{equation}
+and the probability of finding one electron
+in the real-spce position ${\bf r}_1$ and one in ${\bf r}_2$ is
+\begin{eqnarray} \label{conditionaldensity_r}
+\lefteqn{ n^{(ee)}({\bf r}_1,{\bf r}_2) = }
+\\ \nonumber
+&=& \langle \Psi_n | \left[ \sum_{s, s' =1}^S \sum_{t, t' =1}^S 
+\psi^*_{p(s')}({\bf r}_1) \psi^*_{p(t')}({\bf r}_2)
+\psi_{p(t)}({\bf r}_2) \psi_{p(s)}({\bf r}_1) \, 
+\delta[q(s')-q(s)] \, \delta[q(t')-q(t)]  \,  
+e^\dagger_{s'} e^\dagger_{t'} e_{t} e_{s} 
+\right] | \Psi_n \rangle
+\\  \nonumber
+&=& \sum_{l, l' = 1}^L  \bigg[ 
+(C^n_{l'})^* C^n_l \, \delta[l_h'-l_h] \sum_{s, s' = 1}^S \sum_{t, t' = 1}^S 
+\psi^*_{p(s')}({\bf r}_1) \psi^*_{p(t')}({\bf r}_2)
+\psi_{p(t)}({\bf r}_2) \psi_{p(s)}({\bf r}_1)
+\\ \nonumber
+&& \delta[q(s')-q(s)] \, \delta[q(t')-q(t)]  \,  
+\langle\Phi^{(e)}_{l'_e}| 
+e^\dagger_{s'} e^\dagger_{t'} e_{t} e_{s} 
+|\Phi^{(e)}_{l_e}\rangle  \bigg] .
+\end{eqnarray}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \vspace{4mm}
 \begin{center}
 \rule{0.8\textwidth}{1pt}

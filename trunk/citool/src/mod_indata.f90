@@ -475,6 +475,10 @@ SUBROUTINE INDATA_COULOMB( citype, numci, ci )
         READ(31,"(1X,2(I3,1X),2X,2(I3,1X),2X)",ADVANCE="NO")   &
              &  ci(nc)%n1, ci(nc)%n2, ci(nc)%n3, ci(nc)%n4
         READ(31,*)  ci(nc)%v
+!ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+! uncomment to remove Coulomb interaction
+! ci(nc)%v= 0.
+!ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
       END DO
       CLOSE(31)
     ELSE IF ( INDEX(fileinformat_coulomb,"complex16") /= 0 ) THEN

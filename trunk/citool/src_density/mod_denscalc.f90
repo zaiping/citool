@@ -6,8 +6,9 @@ MODULE mod_denscalc
 
 CONTAINS
 
-SUBROUTINE DENSCALC( blockdim, mpstate, numspstates_C, ket_C, masksp,  &
-     &               numspwf_C, numx_C, psi_C, indxpsi_C,            &
+SUBROUTINE DENSCALC( blockdim, mpstate, threshold_mpstate,                 &
+     &               numspstates_C, ket_C, masksp,                         &
+     &               numspwf_C, numx_C, psi_C, indxpsi_C, &
      &               numspstates_O, ket_O, dens )
 
 IMPLICIT NONE
@@ -20,6 +21,7 @@ IMPLICIT NONE
 !
 INTEGER, INTENT(IN) :: blockdim
 REAL*8,  INTENT(IN) :: mpstate(:)     !(blockdim)
+REAL*8,  INTENT(IN) :: threshold_mpstate
 INTEGER, INTENT(IN) :: numspstates_C
 INTEGER*8, INTENT(IN) :: ket_C(:)     !(blockdim)
 LOGICAL, INTENT(IN) :: masksp(:)      !(numspstates_C)
@@ -39,18 +41,21 @@ INTEGER :: nx
 
 ALLOCATE( matcc(numspstates_C, numspstates_C) )
 
-tinye= 2*TINY(1E1)
+tinye= TINY(1E1)
 dens= 0d0
 
 DO nl= 1, blockdim
+  IF (ABS(mpstate(nl)) < threshold_mpstate) CYCLE
   DO nlp= 1, blockdim
+    IF (ABS(mpstate(nlp)) < threshold_mpstate) CYCLE
+
     IF ( ket_O(nl) /= ket_O(nlp) )  CYCLE   
     ! here I suppose that the unused sp states bits are set to zero
 
     !PRINT*, "nl, nl' =", nl, nlp
 
     clcl= mpstate(nl)*mpstate(nlp)
-    IF (ABS(clcl) <= tinye) CYCLE
+    IF (ABS(clcl) <= 2*tinye) CYCLE
 
     matcc= 0
     DO ns= 1, numspstates_C

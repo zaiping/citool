@@ -51,6 +51,7 @@ VPATH = ../src/
 OBJS =  main.o                     \
         mod_indatadensity.o        \
         mod_denscalc.o             \
+        mod_condenscalc.o          \
         mod_inoutrs.o              \
         mod_staticdata.o           \
         mod_indata.o               \
@@ -85,6 +86,7 @@ clean:
 
 main.o :		mod_indatadensity.o        \
 			mod_denscalc.o             \
+			mod_condenscalc.o          \
 			mod_inoutrs.o              \
 	                mod_indata.o               \
 			mod_logga.o                \
@@ -95,6 +97,8 @@ main.o :		mod_indatadensity.o        \
 mod_indatadensity.o:
 
 mod_denscalc.o:
+
+mod_condenscalc.o:
 
 mod_inoutrs.o:
 

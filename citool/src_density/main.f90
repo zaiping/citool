@@ -3,6 +3,7 @@
 PROGRAM MAIN 
   USE mod_indatadensity
   USE mod_denscalc
+  USE mod_condenscalc
   USE mod_inoutrs
   USE mod_indata  !(from CItool program)
   USE mod_logga
@@ -47,6 +48,7 @@ REAL*8, ALLOCATABLE :: mpenergies(:,:)
 REAL*8, ALLOCATABLE :: mpenergies_read(:,:)
 REAL*8, ALLOCATABLE :: mpstates(:,:)
 REAL*8, ALLOCATABLE :: mpstates_read(:,:)
+REAL*8 :: threshold_mpstate
 
 ! SP states
 INTEGER :: numspqn_e, numspqn_h
@@ -67,6 +69,14 @@ CHARACTER(80), ALLOCATABLE :: densfiles_e(:)
 CHARACTER(80), ALLOCATABLE :: densfiles_h(:)
 LOGICAL, ALLOCATABLE :: masksp(:)
 
+! description of conditional densities to be computed
+INTEGER :: numcondensdesc
+INTEGER, ALLOCATABLE :: condensdesc(:,:,:)
+CHARACTER(80), ALLOCATABLE :: condensfiles(:)
+CHARACTER(80), ALLOCATABLE :: condenspoints(:)
+REAL*8, ALLOCATABLE ::  psi_fixed(:)
+LOGICAL, ALLOCATABLE :: maskspfixed(:)
+
 ! psi wave functions
 INTEGER :: numx_e, numx_h
 INTEGER :: numspwf_e, numspwf_h
@@ -85,6 +95,7 @@ REAL*8, ALLOCATABLE :: densTOT(:)
 INTEGER :: wantblockdim, wantblockfr, wantblockto
 CHARACTER(80) :: string80
 REAL*8 :: normsum, denssum
+REAL*8 :: tinye
 LOGICAL :: found= .FALSE.
 INTEGER :: ncons_e, ncons_h, ncons_e_read, ncons_h_read
 INTEGER :: pospsiqn 
@@ -96,6 +107,8 @@ INTEGER :: ns, nx, nb, nmpene, ne, ndd
 CALL INDATADENSITY_GET("density4CItool.nml")
 
 CALL INDATA_GET("citool.nml")
+
+tinye= TINY(1E1)
 
 CALL LOGGA(3, "                 ")
 CALL LOGGA(3, "  ===  START density4CItool v. "//TRIM(density4citool_version)//"  ====")
@@ -156,14 +169,24 @@ END IF
 IF (num_e>0) THEN
   CALL LOGGA(2, "reading single-particle wave functions for ELECs")
   ! psi_e is allocated inside the routine
-  CALL INSPWF(numspwf_e, numx_e, psi_e, fileinBIN_psi_e)
+  CALL INSPWF(numspwf_e, numx_e, psi_e, relthreshold_psi_e, fileinBIN_psi_e)
 END IF
+!IF (relthreshold_psi_e > tinye) THEN
+!  threshold_psi_e= relthreshold_psi_e * SUM(ABS(psi_e)**2)/(numspwf_e*numx_e)
+!ELSE
+!  threshold_psi_e= tinye
+!END IF
 
 IF (num_h>0) THEN
   CALL LOGGA(2, "reading single-particle wave functions for HOLEs")
   ! psi_h is allocated inside the routine
-  CALL INSPWF(numspwf_h, numx_h, psi_h, fileinBIN_psi_h)
+  CALL INSPWF(numspwf_h, numx_h, psi_h, relthreshold_psi_h, fileinBIN_psi_h)
 END IF
+!IF (relthreshold_psi_h > tinye) THEN
+!  threshold_psi_h= relthreshold_psi_h * SUM(ABS(psi_h)**2)/(numspwf_h*numx_h)
+!ELSE
+!  threshold_psi_h= tinye
+!END IF
 
 !!$!......................................checks normalization of sp wave function
 !!$IF (num_e>0) THEN
@@ -234,6 +257,27 @@ ELSE
   numdensdesc_h= 0
   CALL LOGGA(2, "no density to be computed for HOLES")
 END IF
+
+!................reads the description of the conditional densities to be computed
+IF (filein_condensdescription /= "") THEN
+  CALL INDATADENSITY_CONDENSDESCRIPTION(numspqn_e, namespqn_e, numspqn_h, namespqn_h,  &
+       &  numcondensdesc, condensdesc, condensfiles, condenspoints )
+  CALL LOGGA(2, "num of conditional densities to be computed", numcondensdesc)
+ELSE
+  numcondensdesc= 0
+  CALL LOGGA(2, "no conditional density to be computed")
+END IF
+
+
+
+print*, "numcondensdesc, numspqn_e=", numcondensdesc, numspqn_e
+do ndd= 1, numcondensdesc
+  do nx= -1, numspqn_e
+    print*, condensdesc(ndd,nx,1), condensdesc(ndd,nx,2)
+  end do
+end do
+!stop
+
 
 
 !...................................reads the reordered total Hilbert space
@@ -350,6 +394,8 @@ ALLOCATE(indx_mpene(numblock*nummpenergiescons))
 
 nmpene= 0
 DO nb= 1, numblock
+  print*, "num block : ", nb
+  print*, "num block energies : ", blocknummpenergies(nb)
   DO ne= 1, blocknummpenergies(nb)
     nmpene= nmpene+1
     ene_mpene(nmpene)= mpenergies(ne,nb)
@@ -360,11 +406,11 @@ END DO
 
 print*, "nmpene", nmpene
 print*, "ene_mpene", ene_mpene
-print*, "indx_mpene", indx_mpene
 
 CALL indexx(nmpene, ene_mpene, indx_mpene)
 
 print*, "after call indexx"
+print*, "indx_mpene", indx_mpene
 
 DO ne= 1, nmpene
   CALL LOGGA(2, " BLOCK: "//STRING(nblock_mpene(indx_mpene(ne)),4)//     &
@@ -432,9 +478,17 @@ DO ndd= 1, numdensdesc_e
     wantblockfr= blockstart(want_block(nwant))
     wantblockto= blockstart(want_block(nwant)+1)-1
 
-    CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,want_rank(nwant)),  &
-         &  numspstates_e, ket(wantblockfr:wantblockto,1), masksp,                    &
-         &  numspwf_e, numx_e, psi_e, spqn_e(1:numspstates_e,pospsiqn),               &
+    IF (relthreshold_mpstate > 2*tinye) THEN
+      threshold_mpstate= relthreshold_mpstate *    &
+           &  SUM(ABS( mpstates(wantblockfr:wantblockto,want_rank(nwant)) )) / wantblockdim
+    ELSE
+      threshold_mpstate= 0.
+    END IF
+
+    CALL DENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,want_rank(nwant)),     &
+         &  threshold_mpstate,                                                           &
+         &  numspstates_e, ket(wantblockfr:wantblockto,1), masksp,                       &
+         &  numspwf_e, numx_e, psi_e, spqn_e(1:numspstates_e,pospsiqn),                  &
          &  numspstates_h, ket(wantblockfr:wantblockto,2), dens )
     densTOT= densTOT + dens
 
@@ -443,7 +497,7 @@ DO ndd= 1, numdensdesc_e
   !.....................................................writing density to files
   densTOT= densTOT/numwantmpstates
   CALL OUTDENS( numx_e, densTOT, densfiles_e(ndd), denssum )
-  CALL LOGGA(2, "integrated TOTAL density=", denssum)
+  CALL LOGGA(2, "integrated density=", denssum)
 
 END DO
 
@@ -457,6 +511,109 @@ DEALLOCATE(masksp)
 
 ! NOT IMPLEMENTED JET
 
+
+!::::::::::::::::::::::::::::::::::::::::: conditional density calculation  :::::::
+! WARNING: only for ELEC for the moment
+DO ndd= 1, numcondensdesc
+  IF ( condensdesc(ndd,-1,1) /= 0 ) STOP "MAIN: only ELEC conditional dens for now"
+  IF ( condensdesc(ndd,-1,2) /= 0 ) STOP "MAIN: only fixed ELEC for now"
+END DO
+
+ALLOCATE(dens(numx_e))
+ALLOCATE(densTOT(numx_e))
+ALLOCATE(masksp(numspstates_e))
+ALLOCATE(psi_fixed(numspwf_e))
+ALLOCATE(maskspfixed(numspstates_e))
+
+!.........................................finding psi-type SP quantum number
+pospsiqn= 0
+DO nx= 1, numspqn_e
+  IF (INDEX(typespqn_e(nx),"psi") /= 0 .OR. INDEX(typespqn_e(nx),"PSI") /= 0) THEN
+    pospsiqn= pospsiqn * 9999 + nx
+  END IF
+END DO
+IF (pospsiqn < 1 .OR. pospsiqn > 9999) STOP "no or multiple psi qn type"
+CALL LOGGA(2, " ELEC SP psi-type qn is n.", pospsiqn)
+
+!........................................ loop on conditional density descriptions
+DO ndd= 1, numcondensdesc
+  densTOT= 0.
+
+  CALL LOGGA(2, "computing conditional ELEC density n. ", ndd)
+
+  !..................................selecting elec SP states to be included
+  masksp= .TRUE.
+  DO ns= 1, numspstates_e
+    DO nx= 1, numspqn_e  ! condensdesc(ndd,0,1)
+      IF (condensdesc(ndd,nx,1) /= 9999 .AND. condensdesc(ndd,nx,1) /= spqn_e(ns,nx)) THEN
+        masksp(ns)= .FALSE.
+      END IF
+    END DO
+  END DO
+  print*, "masksp", masksp
+
+  !..................................selecting elec SP states for fixed electron
+  maskspfixed= .TRUE.
+  DO ns= 1, numspstates_e
+    DO nx= 1, numspqn_e  ! condensdesc(ndd,0,2)
+      IF (condensdesc(ndd,nx,2) /= 9999 .AND. condensdesc(ndd,nx,2) /= spqn_e(ns,nx)) THEN
+        maskspfixed(ns)= .FALSE.
+      END IF
+    END DO
+  END DO
+  print*, "maskspfixed", maskspfixed
+
+  CALL FINDPSIFIXED( condenspoints(ndd), numx_e, numspwf_e, psi_e, psi_fixed )
+  !print*, "psi_fixed", psi_fixed
+
+  DO nwant= 1, numwantmpstates
+    dens= 0.
+
+    CALL LOGGA(2, " conditional ELEC density of mp state ", nwant)
+    CALL LOGGA(2, " BLOCK", want_block(nwant))
+    CALL LOGGA(2, " RANK ", want_rank(nwant))
+
+    wantblockdim= blockstart(want_block(nwant)+1)-blockstart(want_block(nwant))
+    wantblockfr= blockstart(want_block(nwant))
+    wantblockto= blockstart(want_block(nwant)+1)-1
+
+    IF (relthreshold_mpstate > 2*tinye) THEN
+      threshold_mpstate= relthreshold_mpstate *    &
+           &  SUM(ABS( mpstates(wantblockfr:wantblockto,want_rank(nwant)) )) / wantblockdim
+    ELSE
+      threshold_mpstate= 0.
+    END IF
+
+    print*, "wantblockdim, wantblockfr, wantblockto", wantblockdim, wantblockfr, wantblockto
+
+    CALL CONDENSCALC( wantblockdim, mpstates(wantblockfr:wantblockto,want_rank(nwant)),  &
+         &  threshold_mpstate,                                                           &
+         &  numspstates_e, ket(wantblockfr:wantblockto,1),                               &
+         &  masksp, numspwf_e, numx_e, psi_e, spqn_e(1:numspstates_e,pospsiqn),          &
+         &  numspstates_h, ket(wantblockfr:wantblockto,2),                               &
+         &  numspstates_e, ket(wantblockfr:wantblockto,1),                               &
+         &  maskspfixed, numspwf_e, psi_fixed, spqn_e(1:numspstates_e,pospsiqn),         &
+         &  numspstates_h, ket(wantblockfr:wantblockto,2),                        dens )
+
+    densTOT= densTOT + dens
+
+  END DO
+
+  !.....................................................writing density to files
+  densTOT= densTOT/numwantmpstates
+  CALL OUTDENS( numx_e, densTOT, condensfiles(ndd), denssum )
+  CALL LOGGA(2, "integrated conditional density=", denssum)
+
+  print*
+
+END DO
+
+!......................................................finalizations
+DEALLOCATE(dens)
+DEALLOCATE(densTOT)
+DEALLOCATE(masksp)
+DEALLOCATE(psi_fixed)
+DEALLOCATE(maskspfixed)
 
 CALL LOGGA(3, "  == END density4CItool ==")
 
